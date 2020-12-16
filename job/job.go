@@ -34,8 +34,8 @@ import (
   "os"
   "fmt"
   "io/ioutil"
-  "gopkg.in/yaml.v2"
 
+  "gopkg.in/yaml.v2"
   log "github.com/sirupsen/logrus"
 )
 
