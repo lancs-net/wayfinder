@@ -1,7 +1,12 @@
 params:
-  - name: TEST
+  - name: TEST_STRING
     type: string
     default: "hello"
+
+  - name: TEST_INT
+    type: int
+    min: 1
+    max: 5
 
 run:
   cmd:
