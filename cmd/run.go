@@ -45,6 +45,7 @@ import (
 
 type RunConfig struct {
   CpuSets string
+  DryRun  bool
 }
 
 var (
@@ -65,6 +66,12 @@ func init() {
     fmt.Sprintf("1-%d", runtime.NumCPU()),
     "Specify which CPUs to run experiments on.",
   )
+  runCmd.PersistentFlags().BoolVar(
+    &runConfig.DryRun,
+    "dry-run", 
+    false,
+    "Run without affecting the host or running the jobs.",
+  )
 }
 
 // doRunCmd 
@@ -77,7 +84,8 @@ func doRunCmd(cmd *cobra.Command, args []string) {
 
   setupInterruptHandler()
 
-  err = run.PrepareEnvironment()
+  // Prepare environment
+  err = run.PrepareEnvironment(runConfig.DryRun)
   if err != nil {
     log.Errorf("Could not prepare environment: %s", err)
     cleanup()
@@ -146,5 +154,5 @@ func setupInterruptHandler() {
 // Preserve the host environment
 func cleanup() {
   log.Info("Running clean up...")
-  run.RevertEnvironment()
+  run.RevertEnvironment(runConfig.DryRun)
 }

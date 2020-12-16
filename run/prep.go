@@ -76,7 +76,7 @@ func (p *Proc) remember(path string, original string, new string) {
 }
 
 // setProcfsValue sets a string value at a procfs path
-func setProcfsValue(path string, value string) error {
+func setProcfsValue(path string, value string, dryRun bool) error {
   // Check if the path is set
   if len(path) == 0 {
     return fmt.Errorf("File path cannot be empty")
@@ -89,6 +89,9 @@ func setProcfsValue(path string, value string) error {
 
   dat, err := ioutil.ReadFile(path)
   if err != nil {
+    if dryRun {
+      log.Warnf("Could not read file: %s", err)
+    } else {
     return fmt.Errorf("Could not read file: %s", err)
   }
   
@@ -108,35 +111,41 @@ func setProcfsValue(path string, value string) error {
   // Open file
   f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
   if err != nil {
-    return err
+    if dryRun {
+      log.Warn(err)
+    } else {
+      return err
+    }
   }
+  
+  if !dryRun {
+    // Write new value to path
+    _, err = fmt.Fprintf(f, "%s", value)
+    if err != nil {
+      return err
+    }
 
-  // Write new value to path
-  _, err = fmt.Fprintf(f, "%s", value)
-  if err != nil {
-    return err
-  }
-
-  // Close file
-  if err := f.Close(); err != nil {
-    return err
+    // Close file
+    if err := f.Close(); err != nil {
+      return err
+    }
   }
 
   return nil
 }
 
-func PrepareEnvironment() error {
+func PrepareEnvironment(dryRun bool) error {
   /*
    * Filesystem preparation
    */
 
-  err := setProcfsValue("/proc/sys/fs/file-max", "20000")
+  err := setProcfsValue("/proc/sys/fs/file-max", "20000", dryRun)
   if err != nil {
     return err
   }
 
   // Drop fs cache
-  err = setProcfsValue("/proc/sys/vm/drop_caches", "3")
+  err = setProcfsValue("/proc/sys/vm/drop_caches", "3", dryRun)
   if err != nil {
     return err
   }
@@ -145,27 +154,27 @@ func PrepareEnvironment() error {
    * Networking preparation
    */
 
-  err = setProcfsValue("/proc/sys/net/core/somaxconn", "1024")
+  err = setProcfsValue("/proc/sys/net/core/somaxconn", "1024", dryRun)
   if err != nil {
     return err
   }
 
-  err = setProcfsValue("/proc/sys/net/ipv4/ip_local_port_range", "1024   60999")
+  err = setProcfsValue("/proc/sys/net/ipv4/ip_local_port_range", "1024   60999", dryRun)
   if err != nil {
     return err
   }
 
-  // err = setProcfsValue("/proc/sys/net/ipv4/tcp_tw_reusee", "1")
+  // err = setProcfsValue("/proc/sys/net/ipv4/tcp_tw_reusee", "1", dryRun)
   // if err != nil {
   //   return err
   // }
 
-  err = setProcfsValue("/proc/sys/net/ipv4/tcp_keepalive_time", "60")
+  err = setProcfsValue("/proc/sys/net/ipv4/tcp_keepalive_time", "60", dryRun)
   if err != nil {
     return err
   }
   
-  err = setProcfsValue("/proc/sys/net/ipv4/tcp_keepalive_intvl", "60")
+  err = setProcfsValue("/proc/sys/net/ipv4/tcp_keepalive_intvl", "60", dryRun)
   if err != nil {
     return err
   }
@@ -181,7 +190,7 @@ func PrepareEnvironment() error {
    */
 
   // Disable ASLR
-  err = setProcfsValue("/proc/sys/kernel/randomize_va_space", "0")
+  err = setProcfsValue("/proc/sys/kernel/randomize_va_space", "0", dryRun)
   if err != nil {
     return err
   }
@@ -190,10 +199,10 @@ func PrepareEnvironment() error {
 }
 
 // RevertEnvironment sets original Procfs entries 
-func RevertEnvironment() error {
+func RevertEnvironment(dryRun bool) error {
   // Reset updated procfs itemss
   for _, item := range procfs.Items {
-    err := setProcfsValue(item.Path, item.Original)
+    err := setProcfsValue(item.Path, item.Original, dryRun)
     if err != nil {
       log.Warn(err)
     }
