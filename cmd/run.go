@@ -57,7 +57,12 @@ var (
 )
 
 func init() {
-  runCmd.PersistentFlags().StringVar(&runConfig.CpuSets, "cpu-sets", "", "Specify which CPUs to run experiments on.")
+  runCmd.PersistentFlags().StringVar(
+    &runConfig.CpuSets,
+    "cpu-sets", 
+    fmt.Sprintf("1-%d", runtime.NumCPU()),
+    "Specify which CPUs to run experiments on.",
+  )
 }
 
 // doRunCmd 
