@@ -115,5 +115,7 @@ type RuntimeConfig struct {
 func (j *Job) Start(cfg *RuntimeConfig) error {
   log.Info("Starting job...")
 
+  // TODO: Create a matrix from all the parameters
+
   return nil
 }
