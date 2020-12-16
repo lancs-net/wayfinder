@@ -37,6 +37,7 @@ import (
 	"github.com/spf13/cobra"
   log "github.com/sirupsen/logrus"
 
+	"github.com/lancs-net/ukbench/job"
 	"github.com/lancs-net/ukbench/run"
 )
 
@@ -50,9 +51,15 @@ var runCmd = &cobra.Command{
 
 // doRunCmd 
 func doRunCmd(cmd *cobra.Command, args []string) {
+	_, err := job.NewJob(args[0])
+	if err != nil {
+		log.Fatalf("Could not read configuration: %s", err)
+		os.Exit(1)
+	}
+
   setupInterruptHandler()
 
-	err := run.PrepareEnvironment()
+	err = run.PrepareEnvironment()
 	if err != nil {
 		log.Errorf("Could not prepare environment: %s", err)
     cleanup()
