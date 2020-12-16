@@ -32,6 +32,8 @@ package cmd
 
 import (
 	"os"
+  "fmt"
+  "runtime"
   "os/signal"
 
 	"github.com/spf13/cobra"
