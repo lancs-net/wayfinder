@@ -41,12 +41,23 @@ import (
 	"github.com/lancs-net/ukbench/run"
 )
 
-var runCmd = &cobra.Command{
-	Use: "run [OPTIONS...] [FILE]",
-	Short: `Run a specific experiment job`,
-	Run: doRunCmd,
-	Args: cobra.ExactArgs(1),
-	DisableFlagsInUseLine: true,
+type RunConfig struct {
+  CpuSets string
+}
+
+var (
+  runCmd = &cobra.Command{
+    Use: "run [OPTIONS...] [FILE]",
+    Short: `Run a specific experiment job`,
+    Run: doRunCmd,
+    Args: cobra.ExactArgs(1),
+    DisableFlagsInUseLine: true,
+  }
+  runConfig = &RunConfig{}
+)
+
+func init() {
+  runCmd.PersistentFlags().StringVar(&runConfig.CpuSets, "cpu-sets", "", "Specify which CPUs to run experiments on.")
 }
 
 // doRunCmd 
