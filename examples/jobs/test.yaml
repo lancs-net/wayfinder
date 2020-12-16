@@ -1,0 +1,9 @@
+params:
+  - name: TEST
+    type: string
+    default: "hello"
+
+run:
+  cmd:
+    |
+    echo $TEST
