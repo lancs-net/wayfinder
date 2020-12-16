@@ -108,7 +108,7 @@ func NewJob(filePath string) (*Job, error) {
 
 // RuntimeConfig contains details about the runtime of ukbench
 type RuntimeConfig struct {
-  CpuSets string
+  Cpus []int
 }
 
 // Start the job

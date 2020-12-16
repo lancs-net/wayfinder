@@ -84,8 +84,15 @@ func doRunCmd(cmd *cobra.Command, args []string) {
 
   setupInterruptHandler()
 
+  // Determine CPU sets
+  cpus, err := parseCpuSets(runConfig.CpuSets)
+  if err != nil {
+    log.Errorf("Could not parse CPU sets: %s", err)
+    os.Exit(1)
+  }
+
   // Prepare environment
-  err = run.PrepareEnvironment(runConfig.DryRun)
+  err = run.PrepareEnvironment(cpus, runConfig.DryRun)
   if err != nil {
     log.Errorf("Could not prepare environment: %s", err)
     cleanup()
@@ -93,7 +100,7 @@ func doRunCmd(cmd *cobra.Command, args []string) {
   }
 
   j.Start(&job.RuntimeConfig{
-    CpuSets: runConfig.CpuSets,
+    Cpus: cpus,
   })
 
   // We're all done now

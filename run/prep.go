@@ -182,7 +182,13 @@ func PrepareEnvironment(dryRun bool) error {
   /*
    * Processor preparation
    */
-  // - Set scaling governor performance
+  // Set scaling governor performance
+  for _, c := range cpus {
+    err = setProcfsValue(fmt.Sprintf("/sys/devices/system/cpu/cpu%d/cpufreq/scaling_governor", c), "performance", dryRun)
+    if err != nil {
+      return err
+    }
+  }
   // - No turbo
 
   /*
