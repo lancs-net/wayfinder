@@ -126,7 +126,10 @@ func setProcfsValue(path string, value string) error {
 }
 
 func PrepareEnvironment() error {
-  // Filesystem
+  /*
+   * Filesystem preparation
+   */
+
   err := setProcfsValue("/proc/sys/fs/file-max", "20000")
   if err != nil {
     return err
@@ -138,7 +141,10 @@ func PrepareEnvironment() error {
     return err
   }
 
-  // Networking
+  /*
+   * Networking preparation
+   */
+
   err = setProcfsValue("/proc/sys/net/core/somaxconn", "1024")
   if err != nil {
     return err
@@ -164,11 +170,16 @@ func PrepareEnvironment() error {
     return err
   }
 
-  // Processor
+  /*
+   * Processor preparation
+   */
   // - Set scaling governor performance
   // - No turbo
 
-  // Memory
+  /*
+   * Memory prepraration
+   */
+
   // Disable ASLR
   err = setProcfsValue("/proc/sys/kernel/randomize_va_space", "0")
   if err != nil {
