@@ -106,7 +106,14 @@ func NewJob(filePath string) (*Job, error) {
   return &job, nil
 }
 
+// RuntimeConfig contains details about the runtime of ukbench
+type RuntimeConfig struct {
+  CpuSets string
+}
+
 // Start the job
-func (j *Job) Start() error {
+func (j *Job) Start(cfg *RuntimeConfig) error {
+  log.Info("Starting job...")
+
   return nil
 }

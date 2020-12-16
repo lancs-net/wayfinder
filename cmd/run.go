@@ -69,7 +69,7 @@ func init() {
 
 // doRunCmd 
 func doRunCmd(cmd *cobra.Command, args []string) {
-	_, err := job.NewJob(args[0])
+	j, err := job.NewJob(args[0])
 	if err != nil {
 		log.Fatalf("Could not read configuration: %s", err)
 		os.Exit(1)
@@ -83,6 +83,10 @@ func doRunCmd(cmd *cobra.Command, args []string) {
     cleanup()
     os.Exit(1)
   }
+
+  j.Start(&job.RuntimeConfig{
+    CpuSets: runConfig.CpuSets,
+  })
 
   // We're all done now
   cleanup()
