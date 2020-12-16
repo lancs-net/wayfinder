@@ -160,10 +160,23 @@ func UpdateProcfs() error {
 }
 
 func PrepareEnvironment() error {
+  // Filesystem
   err := UpdateProcfs()
   if err != nil {
     return err
   }
+
+  // Networking
+  // - Enable ip forwarding
+  // - Create bridge
+
+  // Processor
+  // - Set scaling governor performance
+  // - No turbo
+
+  // Memory
+  // - Drop fs cache
+  // - Disable aslr
 
   return nil
 }
