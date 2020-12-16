@@ -92,6 +92,46 @@ func doRunCmd(cmd *cobra.Command, args []string) {
   cleanup()
 }
 
+func parseCpuSets(cpuSets string) ([]int, error) {
+  var cpus []int
+  
+  if res := strings.Contains(cpuSets, "-"); res {
+    c := strings.Split(cpuSets, "-")
+    if len(c) > 2 {
+      return cpus, fmt.Errorf("Invalid syntax for CPU sets")
+    }
+
+    start, err := strconv.Atoi(c[0])
+    if err != nil {
+      return cpus, fmt.Errorf("Invalid syntax for CPU sets")
+    }
+
+    end, err := strconv.Atoi(c[1])
+    if err != nil {
+      return cpus, fmt.Errorf("Invalid syntax for CPU sets")
+    }
+    
+    for i := start; i < end; i++ {
+      cpus = append(cpus, i)
+    }
+  }
+
+  if strings.Contains(cpuSets, ",") {
+    c := strings.Split(cpuSets, ",")
+
+    for i := range c {
+      j, err := strconv.Atoi(c[i])
+      if err != nil {
+        return cpus, fmt.Errorf("Invalid syntax for CPU sets")
+      }
+
+      cpus = append(cpus, j)
+    }
+  }
+
+  return cpus, nil
+}
+
 // Create a Ctrl+C trap for reverting machine state
 func setupInterruptHandler() {
   c := make(chan os.Signal, 1)
