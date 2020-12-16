@@ -125,7 +125,7 @@ func setProcfsValue(path string, value string) error {
   return nil
 }
 
-func PrepareEnvironment() error {
+func UpdateProcfs() error {
   err := setProcfsValue("/proc/sys/fs/file-max", "20000")
   if err != nil {
     return err
@@ -152,6 +152,15 @@ func PrepareEnvironment() error {
   }
   
   err = setProcfsValue("/proc/sys/net/ipv4/tcp_keepalive_intvl", "60")
+  if err != nil {
+    return err
+  }
+
+  return nil
+}
+
+func PrepareEnvironment() error {
+  err := UpdateProcfs()
   if err != nil {
     return err
   }
