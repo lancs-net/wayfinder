@@ -169,7 +169,11 @@ func PrepareEnvironment() error {
   // - No turbo
 
   // Memory
-  // - Disable aslr
+  // Disable ASLR
+  err = setProcfsValue("/proc/sys/kernel/randomize_va_space", "0")
+  if err != nil {
+    return err
+  }
 
   return nil
 }
