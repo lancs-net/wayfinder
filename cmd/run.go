@@ -32,11 +32,12 @@ package cmd
 
 import (
 	"os"
+  "os/signal"
 
 	"github.com/spf13/cobra"
   log "github.com/sirupsen/logrus"
 
-	"github.com/lancs-net/ukbench/job"
+	"github.com/lancs-net/ukbench/run"
 )
 
 var runCmd = &cobra.Command{
@@ -49,9 +50,32 @@ var runCmd = &cobra.Command{
 
 // doRunCmd 
 func doRunCmd(cmd *cobra.Command, args []string) {
-	_, err := job.NewJob(args[0])
+  setupInterruptHandler()
+
+	err := run.PrepareEnvironment()
 	if err != nil {
-		log.Fatalf("Could not read configuration: %s", err)
+		log.Errorf("Could not prepare environment: %s", err)
+    cleanup()
 		os.Exit(1)
 	}
+
+  // We're all done now
+  cleanup()
+}
+
+// Create a Ctrl+C trap for reverting machine state
+func setupInterruptHandler() {
+  c := make(chan os.Signal, 1)
+  signal.Notify(c, os.Interrupt)
+  go func(){
+    <-c
+    cleanup()
+    os.Exit(1)
+  }()
+}
+
+// Preserve the host environment
+func cleanup() {
+  log.Info("Running clean up...")
+  run.RevertEnvironment()
 }
