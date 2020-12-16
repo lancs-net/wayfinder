@@ -70,12 +70,12 @@ func doRunCmd(cmd *cobra.Command, args []string) {
 
   setupInterruptHandler()
 
-	err = run.PrepareEnvironment()
-	if err != nil {
-		log.Errorf("Could not prepare environment: %s", err)
+  err = run.PrepareEnvironment()
+  if err != nil {
+    log.Errorf("Could not prepare environment: %s", err)
     cleanup()
-		os.Exit(1)
-	}
+    os.Exit(1)
+  }
 
   // We're all done now
   cleanup()
