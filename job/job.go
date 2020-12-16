@@ -1,4 +1,4 @@
-package cmd
+package job
 // SPDX-License-Identifier: BSD-3-Clause
 //
 // Authors: Alexander Jung <a.jung@lancs.ac.uk>
@@ -31,27 +31,82 @@ package cmd
 // POSSIBILITY OF SUCH DAMAGE.
 
 import (
-	"os"
+  "os"
+  "fmt"
+  "io/ioutil"
+  "gopkg.in/yaml.v2"
 
-	"github.com/spf13/cobra"
   log "github.com/sirupsen/logrus"
-
-	"github.com/lancs-net/ukbench/job"
 )
 
-var runCmd = &cobra.Command{
-	Use: "run [OPTIONS...] [FILE]",
-	Short: `Run a specific experiment job`,
-	Run: doRunCmd,
-	Args: cobra.ExactArgs(1),
-	DisableFlagsInUseLine: true,
+type JobParam struct {
+  Name      string `yaml:"name"`
+  Type      string `yaml:"type"`
+  Default   string `yaml:"default"`
+  Only    []string `yaml:"only"`
+  Min       string `yaml:"min"`
+  Max       string `yaml:"max"`
+  Step      int    `yaml:"step"`
+  StepMode  string `yaml:"step_mode"`
 }
 
-// doRunCmd 
-func doRunCmd(cmd *cobra.Command, args []string) {
-	_, err := job.NewJob(args[0])
-	if err != nil {
-		log.Fatalf("Could not read configuration: %s", err)
-		os.Exit(1)
-	}
+type Input struct {
+  Name string `yaml:"name"`
+  Path string `yaml:"path"`
+}
+
+type Output struct {
+  Name string `yaml:"name"`
+  Path string `yaml:"path"`
+}
+
+type Run struct {
+  Path string `yaml:"path"`
+  Cmd  string `yaml:"cmd"`
+}
+
+type Job struct {
+  Params  []JobParam `yaml:"params"`
+  Inputs  []Input    `yaml:"inputs"`
+  Outputs []Output   `yaml:"outputs"`
+  Run       Run      `yaml:"run"`
+}
+
+// NewJob prepares a job yaml file
+func NewJob(filePath string) (*Job, error) {
+  // Check if the path is set
+  if len(filePath) == 0 {
+    return nil, fmt.Errorf("File path cannot be empty")
+  }
+
+  // Check if the file exists
+  if _, err := os.Stat(filePath); os.IsNotExist(err) {
+    return nil, fmt.Errorf("File does not exist: %s", filePath)
+  }
+
+  // Slurp the file contents into memory
+  dat, err := ioutil.ReadFile(filePath)
+  if err != nil {
+    return nil, err
+  }
+
+  if len(dat) == 0 {
+    return nil, fmt.Errorf("File is empty")
+  }
+
+  job := Job{}
+
+  err = yaml.Unmarshal([]byte(dat), &job)
+  if err != nil {
+    return nil, err
+  }
+
+  log.Debugf("Read in job configuration: %s", filePath)
+
+  return &job, nil
+}
+
+// Start the job
+func (j *Job) Start() error {
+  return nil
 }
