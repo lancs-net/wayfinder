@@ -189,7 +189,13 @@ func PrepareEnvironment(dryRun bool) error {
       return err
     }
   }
-  // - No turbo
+  
+  // Disable Intel Turbo mode
+  // TODO: Determine if this setting is even possible on this machine
+  err = setProcfsValue("/sys/devices/system/cpu/intel_pstate/no_turbo", "1", dryRun)
+  if err != nil {
+    return err
+  }
 
   /*
    * Memory prepraration
