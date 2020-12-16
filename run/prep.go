@@ -125,12 +125,16 @@ func setProcfsValue(path string, value string) error {
   return nil
 }
 
-func UpdateProcfs() error {
+func PrepareEnvironment() error {
+  // Filesystem
   err := setProcfsValue("/proc/sys/fs/file-max", "20000")
   if err != nil {
     return err
   }
 
+  // TODO: Drop fs cache
+
+  // Networking
   err = setProcfsValue("/proc/sys/net/core/somaxconn", "1024")
   if err != nil {
     return err
@@ -140,12 +144,12 @@ func UpdateProcfs() error {
   if err != nil {
     return err
   }
-  
+
   // err = setProcfsValue("/proc/sys/net/ipv4/tcp_tw_reusee", "1")
   // if err != nil {
   //   return err
   // }
-  
+
   err = setProcfsValue("/proc/sys/net/ipv4/tcp_keepalive_time", "60")
   if err != nil {
     return err
@@ -156,26 +160,11 @@ func UpdateProcfs() error {
     return err
   }
 
-  return nil
-}
-
-func PrepareEnvironment() error {
-  // Filesystem
-  err := UpdateProcfs()
-  if err != nil {
-    return err
-  }
-
-  // Networking
-  // - Enable ip forwarding
-  // - Create bridge
-
   // Processor
   // - Set scaling governor performance
   // - No turbo
 
   // Memory
-  // - Drop fs cache
   // - Disable aslr
 
   return nil
@@ -183,6 +172,7 @@ func PrepareEnvironment() error {
 
 // RevertEnvironment sets original Procfs entries 
 func RevertEnvironment() error {
+  // Reset updated procfs itemss
   for _, item := range procfs.Items {
     err := setProcfsValue(item.Path, item.Original)
     if err != nil {
