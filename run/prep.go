@@ -132,7 +132,11 @@ func PrepareEnvironment() error {
     return err
   }
 
-  // TODO: Drop fs cache
+  // Drop fs cache
+  err = setProcfsValue("/proc/sys/vm/drop_caches", "3")
+  if err != nil {
+    return err
+  }
 
   // Networking
   err = setProcfsValue("/proc/sys/net/core/somaxconn", "1024")
