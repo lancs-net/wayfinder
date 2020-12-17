@@ -216,7 +216,7 @@ func parseParamInt(param *JobParam) ([]*TaskParam, error) {
   return params, nil
 }
 
-func getTaskParams(param *JobParam) ([]*TaskParam, error) {
+func enumerateTaskParams(param *JobParam) ([]*TaskParam, error) {
   switch t := param.Type; t {
   case "string":
     return parseParamStr(param)
