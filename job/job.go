@@ -33,6 +33,8 @@ package job
 import (
   "os"
   "fmt"
+  "math"
+  "strconv"
   "io/ioutil"
 
   "gopkg.in/yaml.v2"
@@ -109,6 +111,124 @@ func NewJob(filePath string) (*Job, error) {
 // RuntimeConfig contains details about the runtime of ukbench
 type RuntimeConfig struct {
   Cpus []int
+}
+
+func parseParamStr(param *JobParam) ([]*TaskParam, error) {
+  var params []*TaskParam
+
+  if len(param.Only) > 0 {
+    for _, val := range param.Only {
+      params = append(params, &TaskParam{
+        Name:  param.Name,
+        Type:  param.Type,
+        Value: val,
+      })
+    }
+  } else if len(param.Default) > 0 {
+    params = append(params, &TaskParam{
+      Name:  param.Name,
+      Type:  param.Type,
+      Value: param.Default,
+    })
+  }
+
+  return params, nil
+}
+
+func parseParamInt(param *JobParam) ([]*TaskParam, error) {
+  var params []*TaskParam
+
+  // Parse values in only
+  if len(param.Only) > 0 {
+    for _, val := range param.Only {
+      params = append(params, &TaskParam{
+        Name:  param.Name,
+        Type:  param.Type,
+        Value: val,
+      })
+    }
+
+  // Parse range between min and max
+  } else if len(param.Min) > 0 {
+    min, err := strconv.Atoi(param.Min)
+    if err != nil {
+      return nil, err
+    }
+    
+    max, err := strconv.Atoi(param.Max)
+    if err != nil {
+      return nil, err
+    }
+
+    if max < min {
+      return nil, fmt.Errorf(
+        "Min can't be greater than max for %s: %d < %d", param.Name, min, max,
+      )
+    }
+
+    // Figure out the step
+    step := 1
+    if len(param.Step) > 0 {
+      step, err = strconv.Atoi(param.Step)
+      if err != nil || step == 0 {
+        return nil, fmt.Errorf(
+          "Invalid step for %s: %s", param.Name, param.Step,
+        )
+      }
+    }
+
+    // Use iterative step
+    if len(param.StepMode) == 0 || param.StepMode == "increment" {
+      for i := min; i < max; i += step {
+        params = append(params, &TaskParam{
+          Name:  param.Name,
+          Type:  param.Type,
+          Value: strconv.Itoa(i),
+        })
+      }
+
+    // Use exponential step
+    } else if param.StepMode == "power" {
+      for i := min; i < max; math.Pow(float64(step), float64(i)) {
+        params = append(params, &TaskParam{
+          Name:  param.Name,
+          Type:  param.Type,
+          Value: strconv.Itoa(i),
+        })
+      }
+
+    // Unknown step mode
+    } else {
+      return nil, fmt.Errorf(
+        "Unknown step mode for param %s: %s", param.Name, param.StepMode,
+      )
+    }
+
+
+  } else if len(param.Default) > 0 {
+    params = append(params, &TaskParam{
+      Name:  param.Name,
+      Type:  param.Type,
+      Value: param.Default,
+    })
+  }
+
+  return params, nil
+}
+
+func getTaskParams(param *JobParam) ([]*TaskParam, error) {
+  switch t := param.Type; t {
+  case "string":
+    return parseParamStr(param)
+  case "int":
+    return parseParamInt(param)
+  case "integer":
+    return parseParamInt(param)
+  default:
+    return nil, fmt.Errorf(
+      "Unknown parameter type: %s", t,
+    )
+  }
 }
 
 // Start the job
