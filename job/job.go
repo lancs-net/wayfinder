@@ -179,7 +179,7 @@ func parseParamInt(param *JobParam) ([]*TaskParam, error) {
 
     // Use iterative step
     if len(param.StepMode) == 0 || param.StepMode == "increment" {
-      for i := min; i < max; i += step {
+      for i := min; i <= max; i += step {
         params = append(params, &TaskParam{
           Name:  param.Name,
           Type:  param.Type,
@@ -189,7 +189,7 @@ func parseParamInt(param *JobParam) ([]*TaskParam, error) {
 
     // Use exponential step
     } else if param.StepMode == "power" {
-      for i := min; i < max; math.Pow(float64(step), float64(i)) {
+      for i := min; i <= max; math.Pow(float64(step), float64(i)) {
         params = append(params, &TaskParam{
           Name:  param.Name,
           Type:  param.Type,
