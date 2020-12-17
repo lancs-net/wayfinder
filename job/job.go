@@ -204,7 +204,6 @@ func parseParamInt(param *JobParam) ([]TaskParam, error) {
       )
     }
 
-
   } else if len(param.Default) > 0 {
     params = append(params, TaskParam{
       Name:  param.Name,
@@ -229,6 +228,62 @@ func paramPermutations(param *JobParam) ([]TaskParam, error) {
       "Unknown parameter type: %s", t,
     )
   }
+}
+
+// nextTask recursively iterates across paramters to generate a set ot tasks
+func (j *Job) nextTask(i int, tasks []*Task, curr []TaskParam) ([]*Task, error) {
+  // List all permutations for this parameter
+  params, err := paramPermutations(&j.Params[i])
+  if err != nil {
+    return nil, err
+  }
+
+  for _, param := range params {
+    if len(curr) > 0 {
+      last := curr[len(curr)-1]
+      if last.Name == param.Name {
+        curr = curr[:len(curr)-1]
+      }
+    }
+
+    curr = append(curr, param)
+
+    // Break when there are no more parameters to iterate over, thus creating
+    // the task.
+    if i + 1 == len(j.Params) {
+      var p = make([]TaskParam, len(j.Params))
+      copy(p, curr)
+      task := &Task{
+        Inputs:  &j.Inputs,
+        Outputs: &j.Outputs,
+        Params: p,
+      }
+      tasks = append(tasks, task)
+
+    // Otherwise, recursively parse parameters in-order    
+    } else {
+      nextTasks, err := j.nextTask(i + 1, nil, curr)
+      if err != nil {
+        return nil, err
+      }
+
+      tasks = append(tasks, nextTasks...)
+    }
+  }
+
+  return tasks, nil
+}
+
+// tasks returns a list of all possible tasks based on parameterisation
+func (j *Job) tasks() ([]*Task, error) {
+  var tasks []*Task
+
+  tasks, err := j.nextTask(0, tasks, nil)
+  if err != nil {
+    return nil, err
+  }
+
+  return tasks, nil
 }
 
 // Start the job
