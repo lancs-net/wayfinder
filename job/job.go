@@ -113,19 +113,19 @@ type RuntimeConfig struct {
   Cpus []int
 }
 
-func parseParamStr(param *JobParam) ([]*TaskParam, error) {
-  var params []*TaskParam
+func parseParamStr(param *JobParam) ([]TaskParam, error) {
+  var params []TaskParam
 
   if len(param.Only) > 0 {
     for _, val := range param.Only {
-      params = append(params, &TaskParam{
+      params = append(params, TaskParam{
         Name:  param.Name,
         Type:  param.Type,
         Value: val,
       })
     }
   } else if len(param.Default) > 0 {
-    params = append(params, &TaskParam{
+    params = append(params, TaskParam{
       Name:  param.Name,
       Type:  param.Type,
       Value: param.Default,
@@ -135,13 +135,13 @@ func parseParamStr(param *JobParam) ([]*TaskParam, error) {
   return params, nil
 }
 
-func parseParamInt(param *JobParam) ([]*TaskParam, error) {
-  var params []*TaskParam
+func parseParamInt(param *JobParam) ([]TaskParam, error) {
+  var params []TaskParam
 
   // Parse values in only
   if len(param.Only) > 0 {
     for _, val := range param.Only {
-      params = append(params, &TaskParam{
+      params = append(params, TaskParam{
         Name:  param.Name,
         Type:  param.Type,
         Value: val,
@@ -180,7 +180,7 @@ func parseParamInt(param *JobParam) ([]*TaskParam, error) {
     // Use iterative step
     if len(param.StepMode) == 0 || param.StepMode == "increment" {
       for i := min; i <= max; i += step {
-        params = append(params, &TaskParam{
+        params = append(params, TaskParam{
           Name:  param.Name,
           Type:  param.Type,
           Value: strconv.Itoa(i),
@@ -190,7 +190,7 @@ func parseParamInt(param *JobParam) ([]*TaskParam, error) {
     // Use exponential step
     } else if param.StepMode == "power" {
       for i := min; i <= max; math.Pow(float64(step), float64(i)) {
-        params = append(params, &TaskParam{
+        params = append(params, TaskParam{
           Name:  param.Name,
           Type:  param.Type,
           Value: strconv.Itoa(i),
@@ -206,7 +206,7 @@ func parseParamInt(param *JobParam) ([]*TaskParam, error) {
 
 
   } else if len(param.Default) > 0 {
-    params = append(params, &TaskParam{
+    params = append(params, TaskParam{
       Name:  param.Name,
       Type:  param.Type,
       Value: param.Default,
@@ -216,7 +216,7 @@ func parseParamInt(param *JobParam) ([]*TaskParam, error) {
   return params, nil
 }
 
-func enumerateTaskParams(param *JobParam) ([]*TaskParam, error) {
+func paramPermutations(param *JobParam) ([]TaskParam, error) {
   switch t := param.Type; t {
   case "string":
     return parseParamStr(param)
