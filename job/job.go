@@ -48,7 +48,7 @@ type JobParam struct {
   Only    []string `yaml:"only"`
   Min       string `yaml:"min"`
   Max       string `yaml:"max"`
-  Step      int    `yaml:"step"`
+  Step      string `yaml:"step"`
   StepMode  string `yaml:"step_mode"`
 }
 
