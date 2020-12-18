@@ -169,7 +169,7 @@ func (st *FixedFIFO) DequeueOrWaitForNextElementContext(ctx context.Context) (in
   if st.IsLocked() {
     return nil, NewQueueError(
       QueueErrorCodeLockedQueue,
-      "The queue is locked"
+      "The queue is locked",
     )
   }
 
@@ -180,7 +180,7 @@ func (st *FixedFIFO) DequeueOrWaitForNextElementContext(ctx context.Context) (in
     }
     return nil, NewQueueError(
       QueueErrorCodeInternalChannelClosed,
-      "internal channel is closed"
+      "internal channel is closed",
     )
 
   case <-ctx.Done():
@@ -207,7 +207,7 @@ func (st *FixedFIFO) DequeueOrWaitForNextElementContext(ctx context.Context) (in
       // next elements
       return nil, NewQueueError(
         QueueErrorCodeEmptyQueue,
-        "empty queue and can't wait for next element"
+        "empty queue and can't wait for next element",
       )
     }
 
