@@ -233,7 +233,7 @@ func paramPermutations(param *JobParam) ([]TaskParam, error) {
   }
 }
 
-// nextTask recursively iterates across paramters to generate a set ot tasks
+// nextTask recursively iterates across paramters to generate a set of tasks
 func (j *Job) nextTask(i int, tasks []*Task, curr []TaskParam) ([]*Task, error) {
   // List all permutations for this parameter
   params, err := paramPermutations(&j.Params[i])
