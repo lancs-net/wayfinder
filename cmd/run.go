@@ -68,9 +68,10 @@ func init() {
     fmt.Sprintf("1-%d", runtime.NumCPU()),
     "Specify which CPUs to run experiments on.",
   )
-  runCmd.PersistentFlags().BoolVar(
+  runCmd.PersistentFlags().BoolVarP(
     &runConfig.DryRun,
-    "dry-run", 
+    "dry-run",
+    "D",
     false,
     "Run without affecting the host or running the jobs.",
   )
