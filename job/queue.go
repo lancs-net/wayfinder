@@ -27,128 +27,129 @@ import (
 )
 
 const (
-	WaitForNextElementChanCapacity           = 1000
-	dequeueOrWaitForNextElementInvokeGapTime = 10
-	QueueErrorCodeEmptyQueue                 = "empty-queue"
-	QueueErrorCodeLockedQueue                = "locked-queue"
-	QueueErrorCodeIndexOutOfBounds           = "index-out-of-bounds"
-	QueueErrorCodeFullCapacity               = "full-capacity"
-	QueueErrorCodeInternalChannelClosed      = "internal-channel-closed"
+  WaitForNextElementChanCapacity           = 1000
+  dequeueOrWaitForNextElementInvokeGapTime = 10
+  QueueErrorCodeEmptyQueue                 = "empty-queue"
+  QueueErrorCodeLockedQueue                = "locked-queue"
+  QueueErrorCodeIndexOutOfBounds           = "index-out-of-bounds"
+  QueueErrorCodeFullCapacity               = "full-capacity"
+  QueueErrorCodeInternalChannelClosed      = "internal-channel-closed"
 )
 
 type QueueError struct {
-	code    string
-	message string
+  code    string
+  message string
 }
 
 func NewQueueError(code string, message string) *QueueError {
-	return &QueueError{
-		code:    code,
-		message: message,
-	}
+  return &QueueError{
+    code:    code,
+    message: message,
+  }
 }
 
 func (st *QueueError) Error() string {
-	return st.message
+  return st.message
 }
 
 func (st *QueueError) Code() string {
-	return st.code
+  return st.code
 }
 
 // Fixed capacity FIFO (First In First Out) concurrent queue
 type FixedFIFO struct {
-	queue    chan interface{}
-	lockChan chan struct{}
-	// queue for watchers that will wait for next elements (if queue is empty at
+  queue    chan interface{}
+  lockChan chan struct{}
+  // queue for watchers that will wait for next elements (if queue is empty at
   // DequeueOrWaitForNextElement execution)
-	waitForNextElementChan chan chan interface{}
+  waitForNextElementChan chan chan interface{}
 }
 
 func NewFixedFIFO(capacity int) *FixedFIFO {
-	queue := &FixedFIFO{}
-	queue.initialize(capacity)
+  queue := &FixedFIFO{}
+  queue.initialize(capacity)
 
-	return queue
+  return queue
 }
 
 func (st *FixedFIFO) initialize(capacity int) {
-	st.queue = make(chan interface{}, capacity)
-	st.lockChan = make(chan struct{}, 1)
-	st.waitForNextElementChan = make(
+  st.queue = make(chan interface{}, capacity)
+  st.lockChan = make(chan struct{}, 1)
+  st.waitForNextElementChan = make(
     chan chan interface{},
     WaitForNextElementChanCapacity,
   )
 }
 
+
 // Enqueue enqueues an element. Returns error if queue is locked or it is at
 // full capacity.
 func (st *FixedFIFO) Enqueue(value interface{}) error {
-	if st.IsLocked() {
-		return NewQueueError(QueueErrorCodeLockedQueue, "The queue is locked")
-	}
+  if st.IsLocked() {
+    return NewQueueError(QueueErrorCodeLockedQueue, "The queue is locked")
+  }
 
-	// check if there is a listener waiting for the next element (this element)
-	select {
-	case listener := <-st.waitForNextElementChan:
-		// verify whether it is possible to notify the listener (it could be the
+  // check if there is a listener waiting for the next element (this element)
+  select {
+  case listener := <-st.waitForNextElementChan:
+    // verify whether it is possible to notify the listener (it could be the
     // listener is no longer available because the context expired:
     // DequeueOrWaitForNextElementContext)
-		select {
-			// sends the element through the listener's channel instead of enqueueing
+    select {
+      // sends the element through the listener's channel instead of enqueueing
       // it
-			case listener <- value:
-			default:
-				// push the element into the queue instead of sending it through the
+      case listener <- value:
+      default:
+        // push the element into the queue instead of sending it through the
         // listener's channel (which is not available at this moment)
-				return st.enqueueIntoQueue(value)
-		}
+        return st.enqueueIntoQueue(value)
+    }
 
-	default:
-		// enqueue the element into the queue
-		return st.enqueueIntoQueue(value)
-	}
+  default:
+    // enqueue the element into the queue
+    return st.enqueueIntoQueue(value)
+  }
 
-	return nil
+  return nil
 }
 
 // enqueueIntoQueue enqueues the given item directly into the regular queue
 func (st *FixedFIFO) enqueueIntoQueue(value interface{}) error {
-	select {
-	case st.queue <- value:
-	default:
-		return NewQueueError(QueueErrorCodeFullCapacity, "FixedFIFO queue is at full capacity")
-	}
+  select {
+  case st.queue <- value:
+  default:
+    return NewQueueError(QueueErrorCodeFullCapacity, "FixedFIFO queue is at full capacity")
+  }
 
-	return nil
+  return nil
 }
 
 // Dequeue dequeues an element. Returns error if: queue is locked, queue is
 // empty or internal channel is closed.
 func (st *FixedFIFO) Dequeue() (interface{}, error) {
-	if st.IsLocked() {
-		return nil, NewQueueError(
+  if st.IsLocked() {
+    return nil, NewQueueError(
       QueueErrorCodeLockedQueue,
       "The queue is locked",
     )
-	}
+  }
 
-	select {
-	case value, ok := <-st.queue:
-		if ok {
-			return value, nil
-		}
+  select {
+  case value, ok := <-st.queue:
+    if ok {
+      return value, nil
+    }
 
-		return nil, NewQueueError(
+    return nil, NewQueueError(
       QueueErrorCodeInternalChannelClosed,
       "internal channel is closed",
     )
-	default:
-		return nil, NewQueueError(
+  default:
+    return nil, NewQueueError(
       QueueErrorCodeEmptyQueue,
       "empty queue"
     )
-	}
+  }
 }
 
 // DequeueOrWaitForNextElement dequeues an element (if exist) or waits until the
@@ -156,7 +157,7 @@ func (st *FixedFIFO) Dequeue() (interface{}, error) {
 // DequeueOrWaitForNextElement() would enqueue multiple "listeners" for future
 // enqueued elements.
 func (st *FixedFIFO) DequeueOrWaitForNextElement() (interface{}, error) {
-	return st.DequeueOrWaitForNextElementContext(context.Background())
+  return st.DequeueOrWaitForNextElementContext(context.Background())
 }
 
 // DequeueOrWaitForNextElementContext dequeues an element (if exist) or waits
@@ -165,88 +166,88 @@ func (st *FixedFIFO) DequeueOrWaitForNextElement() (interface{}, error) {
 // future enqueued elements.  When the passed context expires this function
 // exits and returns the context' error.
 func (st *FixedFIFO) DequeueOrWaitForNextElementContext(ctx context.Context) (interface{}, error) {
-	if st.IsLocked() {
-		return nil, NewQueueError(
+  if st.IsLocked() {
+    return nil, NewQueueError(
       QueueErrorCodeLockedQueue,
       "The queue is locked"
     )
-	}
+  }
 
-	select {
-	case value, ok := <-st.queue:
-		if ok {
-			return value, nil
-		}
-		return nil, NewQueueError(
+  select {
+  case value, ok := <-st.queue:
+    if ok {
+      return value, nil
+    }
+    return nil, NewQueueError(
       QueueErrorCodeInternalChannelClosed,
       "internal channel is closed"
     )
 
-	case <-ctx.Done():
-		return nil, ctx.Err()
+  case <-ctx.Done():
+    return nil, ctx.Err()
 
-	// queue is empty, add a listener to wait until next enqueued element is ready
-	default:
-		// channel to wait for next enqueued element
-		waitChan := make(chan interface{})
+  // queue is empty, add a listener to wait until next enqueued element is ready
+  default:
+    // channel to wait for next enqueued element
+    waitChan := make(chan interface{})
 
-		select {
-		// enqueue a watcher into the watchForNextElementChannel to wait for the
+    select {
+    // enqueue a watcher into the watchForNextElementChannel to wait for the
     // next element
-		case st.waitForNextElementChan <- waitChan:
-			// return the next enqueued element, if any
-			select {
-			case item := <-waitChan:
-				return item, nil
-			case <-ctx.Done():
-				return nil, ctx.Err()
-			}
-		default:
-			// too many watchers (waitForNextElementChanCapacity) enqueued waiting for
+    case st.waitForNextElementChan <- waitChan:
+      // return the next enqueued element, if any
+      select {
+      case item := <-waitChan:
+        return item, nil
+      case <-ctx.Done():
+        return nil, ctx.Err()
+      }
+    default:
+      // too many watchers (waitForNextElementChanCapacity) enqueued waiting for
       // next elements
-			return nil, NewQueueError(
+      return nil, NewQueueError(
         QueueErrorCodeEmptyQueue,
         "empty queue and can't wait for next element"
       )
-		}
+    }
 
-		//return nil, NewQueueError(QueueErrorCodeEmptyQueue, "empty queue")
-	}
+    //return nil, NewQueueError(QueueErrorCodeEmptyQueue, "empty queue")
+  }
 }
 
 // GetLen returns queue's length (total enqueued elements)
 func (st *FixedFIFO) GetLen() int {
-	st.Lock()
-	defer st.Unlock()
+  st.Lock()
+  defer st.Unlock()
 
-	return len(st.queue)
+  return len(st.queue)
 }
 
 // GetCap returns the queue's capacity
 func (st *FixedFIFO) GetCap() int {
-	st.Lock()
+  st.Lock()
 
-	defer st.Unlock()
+  defer st.Unlock()
 
-	return cap(st.queue)
+  return cap(st.queue)
 }
 
 func (st *FixedFIFO) Lock() {
-	// non-blocking fill the channel
-	select {
-	case st.lockChan <- struct{}{}:
-	default:
-	}
+  // non-blocking fill the channel
+  select {
+  case st.lockChan <- struct{}{}:
+  default:
+  }
 }
 
 func (st *FixedFIFO) Unlock() {
-	// non-blocking flush the channel
-	select {
-	case <-st.lockChan:
-	default:
-	}
+  // non-blocking flush the channel
+  select {
+  case <-st.lockChan:
+  default:
+  }
 }
 
 func (st *FixedFIFO) IsLocked() bool {
-	return len(st.lockChan) >= 1
+  return len(st.lockChan) >= 1
 }
