@@ -71,7 +71,7 @@ type Job struct {
   Params  []JobParam `yaml:"params"`
   Inputs  []Input    `yaml:"inputs"`
   Outputs []Output   `yaml:"outputs"`
-  Run       Run      `yaml:"run"`
+  Run     []Run      `yaml:"run"`
 }
 
 // NewJob prepares a job yaml file
