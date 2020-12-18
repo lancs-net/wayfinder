@@ -210,6 +210,9 @@ func parseParamInt(param *JobParam) ([]TaskParam, error) {
       Type:  param.Type,
       Value: param.Default,
     })
+
+  } else {
+    log.Warnf("Parameter not parsed: %s", param.Name)
   }
 
   return params, nil
