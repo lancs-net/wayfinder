@@ -57,7 +57,7 @@ func (st *QueueError) Code() string {
 }
 
 // Fixed capacity FIFO (First In First Out) concurrent queue
-type FixedFIFO struct {
+type Queue struct {
   queue    chan interface{}
   lockChan chan struct{}
   // queue for watchers that will wait for next elements (if queue is empty at
@@ -65,14 +65,14 @@ type FixedFIFO struct {
   waitForNextElementChan chan chan interface{}
 }
 
-func NewFixedFIFO(capacity int) *FixedFIFO {
-  queue := &FixedFIFO{}
+func NewQueue(capacity int) *Queue {
+  queue := &Queue{}
   queue.initialize(capacity)
 
   return queue
 }
 
-func (st *FixedFIFO) initialize(capacity int) {
+func (st *Queue) initialize(capacity int) {
   st.queue = make(chan interface{}, capacity)
   st.lockChan = make(chan struct{}, 1)
   st.waitForNextElementChan = make(
@@ -81,10 +81,9 @@ func (st *FixedFIFO) initialize(capacity int) {
   )
 }
 
-
 // Enqueue enqueues an element. Returns error if queue is locked or it is at
 // full capacity.
-func (st *FixedFIFO) Enqueue(value interface{}) error {
+func (st *Queue) Enqueue(value interface{}) error {
   if st.IsLocked() {
     return NewQueueError(QueueErrorCodeLockedQueue, "The queue is locked")
   }
@@ -114,11 +113,11 @@ func (st *FixedFIFO) Enqueue(value interface{}) error {
 }
 
 // enqueueIntoQueue enqueues the given item directly into the regular queue
-func (st *FixedFIFO) enqueueIntoQueue(value interface{}) error {
+func (st *Queue) enqueueIntoQueue(value interface{}) error {
   select {
   case st.queue <- value:
   default:
-    return NewQueueError(QueueErrorCodeFullCapacity, "FixedFIFO queue is at full capacity")
+    return NewQueueError(QueueErrorCodeFullCapacity, "Queue queue is at full capacity")
   }
 
   return nil
@@ -126,7 +125,7 @@ func (st *FixedFIFO) enqueueIntoQueue(value interface{}) error {
 
 // Dequeue dequeues an element. Returns error if: queue is locked, queue is
 // empty or internal channel is closed.
-func (st *FixedFIFO) Dequeue() (interface{}, error) {
+func (st *Queue) Dequeue() (interface{}, error) {
   if st.IsLocked() {
     return nil, NewQueueError(
       QueueErrorCodeLockedQueue,
@@ -147,7 +146,7 @@ func (st *FixedFIFO) Dequeue() (interface{}, error) {
   default:
     return nil, NewQueueError(
       QueueErrorCodeEmptyQueue,
-      "empty queue"
+      "empty queue",
     )
   }
 }
@@ -156,7 +155,7 @@ func (st *FixedFIFO) Dequeue() (interface{}, error) {
 // next element gets enqueued and returns it.  Multiple calls to
 // DequeueOrWaitForNextElement() would enqueue multiple "listeners" for future
 // enqueued elements.
-func (st *FixedFIFO) DequeueOrWaitForNextElement() (interface{}, error) {
+func (st *Queue) DequeueOrWaitForNextElement() (interface{}, error) {
   return st.DequeueOrWaitForNextElementContext(context.Background())
 }
 
@@ -165,7 +164,7 @@ func (st *FixedFIFO) DequeueOrWaitForNextElement() (interface{}, error) {
 // DequeueOrWaitForNextElementContext() would enqueue multiple "listeners" for
 // future enqueued elements.  When the passed context expires this function
 // exits and returns the context' error.
-func (st *FixedFIFO) DequeueOrWaitForNextElementContext(ctx context.Context) (interface{}, error) {
+func (st *Queue) DequeueOrWaitForNextElementContext(ctx context.Context) (interface{}, error) {
   if st.IsLocked() {
     return nil, NewQueueError(
       QueueErrorCodeLockedQueue,
@@ -216,7 +215,7 @@ func (st *FixedFIFO) DequeueOrWaitForNextElementContext(ctx context.Context) (in
 }
 
 // GetLen returns queue's length (total enqueued elements)
-func (st *FixedFIFO) GetLen() int {
+func (st *Queue) GetLen() int {
   st.Lock()
   defer st.Unlock()
 
@@ -224,7 +223,7 @@ func (st *FixedFIFO) GetLen() int {
 }
 
 // GetCap returns the queue's capacity
-func (st *FixedFIFO) GetCap() int {
+func (st *Queue) GetCap() int {
   st.Lock()
 
   defer st.Unlock()
@@ -232,7 +231,7 @@ func (st *FixedFIFO) GetCap() int {
   return cap(st.queue)
 }
 
-func (st *FixedFIFO) Lock() {
+func (st *Queue) Lock() {
   // non-blocking fill the channel
   select {
   case st.lockChan <- struct{}{}:
@@ -240,7 +239,7 @@ func (st *FixedFIFO) Lock() {
   }
 }
 
-func (st *FixedFIFO) Unlock() {
+func (st *Queue) Unlock() {
   // non-blocking flush the channel
   select {
   case <-st.lockChan:
@@ -248,6 +247,6 @@ func (st *FixedFIFO) Unlock() {
   }
 }
 
-func (st *FixedFIFO) IsLocked() bool {
+func (st *Queue) IsLocked() bool {
   return len(st.lockChan) >= 1
 }
