@@ -259,7 +259,7 @@ func (j *Job) nextTask(i int, tasks []*Task, curr []TaskParam) ([]*Task, error) 
       task := &Task{
         Inputs:  &j.Inputs,
         Outputs: &j.Outputs,
-        Params: p,
+        Params:   p,
       }
       tasks = append(tasks, task)
 
