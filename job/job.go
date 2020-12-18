@@ -63,8 +63,11 @@ type Output struct {
 }
 
 type Run struct {
-  Path string `yaml:"path"`
-  Cmd  string `yaml:"cmd"`
+  Name      string `yaml:"name"`
+  Image     string `yaml:"image"`
+  Devices []string `yaml:"devices"`
+  Cmd       string `yaml:"cmd"`
+  Path      string `yaml:"path"`
 }
 
 type Job struct {
