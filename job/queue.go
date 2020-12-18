@@ -58,6 +58,7 @@ func (st *QueueError) Code() string {
 
 // Fixed capacity FIFO (First In First Out) concurrent queue
 type Queue struct {
+  capacity int
   queue    chan interface{}
   lockChan chan struct{}
   // queue for watchers that will wait for next elements (if queue is empty at
@@ -66,14 +67,16 @@ type Queue struct {
 }
 
 func NewQueue(capacity int) *Queue {
-  queue := &Queue{}
-  queue.initialize(capacity)
+  queue := &Queue{
+    capacity: capacity,
+  }
+  queue.initialize()
 
   return queue
 }
 
-func (st *Queue) initialize(capacity int) {
-  st.queue = make(chan interface{}, capacity)
+func (st *Queue) initialize() {
+  st.queue = make(chan interface{}, st.capacity)
   st.lockChan = make(chan struct{}, 1)
   st.waitForNextElementChan = make(
     chan chan interface{},
