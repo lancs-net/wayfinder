@@ -65,6 +65,7 @@ type Output struct {
 type Run struct {
   Name      string `yaml:"name"`
   Image     string `yaml:"image"`
+  Cores     int    `yaml:"cores"`
   Devices []string `yaml:"devices"`
   Cmd       string `yaml:"cmd"`
   Path      string `yaml:"path"`
