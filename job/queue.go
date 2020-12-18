@@ -2,6 +2,7 @@ package job
 // SPDX-License-Identifier: MIT
 //
 // Copyright (c) 2019 Enrique Bris
+//               2020 Alexander Jung <a.jung@lancs.ac.uk>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
