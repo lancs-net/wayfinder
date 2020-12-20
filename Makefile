@@ -121,4 +121,4 @@ container:
 .PHONY: devenv
 devenv: DOCKER_RUN_EXTRA ?= -it --name $(BIN)-devenv
 devenv:
-	$(Q)$(call DOCKER_RUN,$(DOCKER_RUN_EXTRA),sh)
+	$(Q)$(call DOCKER_RUN,$(DOCKER_RUN_EXTRA),bash)
