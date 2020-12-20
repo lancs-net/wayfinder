@@ -81,3 +81,16 @@ func (cm *CoreMap) Set(coreId int, atr *ActiveTaskRun) error {
   cm.Unlock()
   return nil
 }
+
+// Get retrieves the ActiveTaskRun at the coreId
+func (cm *CoreMap) Get(coreId int) *ActiveTaskRun {
+  var atr *ActiveTaskRun
+  
+  cm.RLock()
+  if cm.cores[coreId] != nil {
+    atr = cm.cores[coreId]
+  }
+  cm.RUnlock()
+  
+  return atr
+}
