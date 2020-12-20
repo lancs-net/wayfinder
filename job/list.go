@@ -155,3 +155,12 @@ func (l *List) Len() int {
   l.RUnlock()
   return ret
 }
+
+// Get an item
+func (l *List) Get(i int) (interface{}, error) {
+  if i > l.Len() {
+    return nil, fmt.Errorf("Could not find element: %d", i)
+  }
+  
+  return l.items[i], nil
+}
