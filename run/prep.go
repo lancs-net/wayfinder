@@ -135,7 +135,7 @@ func setProcfsValue(path string, value string, dryRun bool) error {
   return nil
 }
 
-func PrepareEnvironment(dryRun bool) error {
+func PrepareEnvironment(cpus []int, dryRun bool) error {
   /*
    * Filesystem preparation
    */
