@@ -30,16 +30,17 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 # Directories
-WORKDIR    ?= $(CURDIR)
-TESTDIR    ?= $(WORKDIR)/tests
-DISTDIR    ?= $(WORKDIR)/dist
+WORKDIR     ?= $(CURDIR)
+TESTDIR     ?= $(WORKDIR)/tests
+DISTDIR     ?= $(WORKDIR)/dist
+INSTALLDIR  ?= /usr/local/bin/
 
 # Arguments
-REGISTRY   ?= ghcr.io
-ORG        ?= lancs-net
-BIN        ?= ukbench
-IMAGE_TAG  ?= latest
-IMAGE      ?= $(REGISTRY)/$(ORG)/$(BIN):$(IMAGE_TAG)
+REGISTRY    ?= ghcr.io
+ORG         ?= lancs-net
+BIN         ?= ukbench
+IMAGE_TAG   ?= latest
+IMAGE       ?= $(REGISTRY)/$(ORG)/$(BIN):$(IMAGE_TAG)
 
 
 ifeq ($(HASH),)
@@ -60,16 +61,16 @@ GIT_SHA     ?= $(shell git update-index -q --refresh && \
 
 
 # Tools
-DOCKER     ?= docker
-DOCKER_RUN ?= $(DOCKER) run --rm $(1) \
-              -w /go/src/github.com/$(ORG)/$(BIN) \
-              -v $(WORKDIR):/go/src/github.com/$(ORG)/$(BIN) \
-              $(REGISTRY)/$(ORG)/$(BIN):$(IMAGE_TAG) \
-                $(2)
-GO         ?= go
+DOCKER      ?= docker
+DOCKER_RUN  ?= $(DOCKER) run --rm $(1) \
+               -w /go/src/github.com/$(ORG)/$(BIN) \
+               -v $(WORKDIR):/go/src/github.com/$(ORG)/$(BIN) \
+               $(REGISTRY)/$(ORG)/$(BIN):$(IMAGE_TAG) \
+                 $(2)
+GO          ?= go
 
 # Misc
-Q          ?= @
+Q           ?= @
 
 # If run with DOCKER= or within a container, unset DOCKER_RUN so all commands
 # are not proxied via docker container.
