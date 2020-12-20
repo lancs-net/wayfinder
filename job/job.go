@@ -79,8 +79,13 @@ type Job struct {
   waitList     *List
 }
 
+// RuntimeConfig contains details about the runtime of ukbench
+type RuntimeConfig struct {
+  Cpus          []int
+}
+
 // NewJob prepares a job yaml file
-func NewJob(filePath string) (*Job, error) {
+func NewJob(filePath string, cfg *RuntimeConfig) (*Job, error) {
   // Check if the path is set
   if len(filePath) == 0 {
     return nil, fmt.Errorf("File path cannot be empty")

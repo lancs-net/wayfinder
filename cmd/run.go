@@ -79,20 +79,20 @@ func init() {
 
 // doRunCmd 
 func doRunCmd(cmd *cobra.Command, args []string) {
-	j, err := job.NewJob(args[0])
-	if err != nil {
-		log.Fatalf("Could not read configuration: %s", err)
-		os.Exit(1)
-	}
-
-  setupInterruptHandler()
-
   // Determine CPU sets
   cpus, err := parseCpuSets(runConfig.CpuSets)
   if err != nil {
     log.Errorf("Could not parse CPU sets: %s", err)
     os.Exit(1)
   }
+
+	j, err := job.NewJob(args[0], &job.RuntimeConfig{
+    Cpus:          cpus,
+  })
+	if err != nil {
+		log.Fatalf("Could not read configuration: %s", err)
+		os.Exit(1)
+	}
 
   // Prepare environment
   err = run.PrepareEnvironment(cpus, runConfig.DryRun)
