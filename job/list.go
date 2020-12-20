@@ -33,6 +33,8 @@ package job
 import (
   "fmt"
   "sync"
+
+  "github.com/lancs-net/ukbench/log"
 )
 
 // CoreMap holds onto to a reference to the particular task which is currently

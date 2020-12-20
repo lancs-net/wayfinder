@@ -38,7 +38,7 @@ import (
   "io/ioutil"
 
   "gopkg.in/yaml.v2"
-  log "github.com/sirupsen/logrus"
+  "github.com/lancs-net/ukbench/log"
 )
 
 type JobParam struct {

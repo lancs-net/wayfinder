@@ -39,7 +39,7 @@ import (
   "os/signal"
 
 	"github.com/spf13/cobra"
-  log "github.com/sirupsen/logrus"
+	"github.com/lancs-net/ukbench/log"
 
 	"github.com/lancs-net/ukbench/job"
 	"github.com/lancs-net/ukbench/run"

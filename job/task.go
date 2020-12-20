@@ -34,6 +34,8 @@ import (
   "io"
   "fmt"
 	"crypto/md5"
+
+  "github.com/lancs-net/ukbench/log"
 )
 
 type TaskParam struct {

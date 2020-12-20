@@ -34,7 +34,7 @@ import (
 	"os"
 	"fmt"
 
-  log "github.com/sirupsen/logrus"
+  "github.com/lancs-net/ukbench/log"
 
 	"github.com/spf13/cobra"
 )
@@ -78,14 +78,8 @@ func init() {
 
 // initLogging prepares logrus with sensible defaults
 func initLogging(verbose bool) {
-  // Output to stdout instead of the default stderr
-  // Can be any io.Writer, see below for File example
-  log.SetOutput(os.Stdout)
-
   // Only log the warning severity or above.
   if verbose {
-		log.SetLevel(log.DebugLevel)
-	} else {	
-		log.SetLevel(log.WarnLevel)
+		log.SetLevel(log.DEBUG)
 	}
 }

@@ -36,7 +36,7 @@ import (
   "strings"
   "io/ioutil"
 
-  log "github.com/sirupsen/logrus"
+  "github.com/lancs-net/ukbench/log"
 )
 
 type ProcValue struct {
