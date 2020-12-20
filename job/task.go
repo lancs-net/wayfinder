@@ -89,6 +89,23 @@ type ActiveTaskRun struct {
   log      *log.Logger
 }
 
+// NewActiveTaskRun initializes the current task and the run step for the
+// the specified cores.
+func NewActiveTaskRun(task *Task, run Run, coreIds []int) (*ActiveTaskRun, error) {
+  atr := &ActiveTaskRun{
+    Task:    task,
+    run:    &run,
+    CoreIds: coreIds,
+  }
+
+  atr.log = &log.Logger{
+    LogLevel: log.GetLevel(),
+    Prefix:   atr.UUID(),
+  }
+
+  return atr, nil
+}
+
 // UUID returns the Unique ID for the task and run
 func (atr *ActiveTaskRun) UUID() string {
   return fmt.Sprintf("%s-%s", atr.Task.UUID(), atr.run.Name)
