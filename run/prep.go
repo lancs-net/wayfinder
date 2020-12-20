@@ -92,7 +92,8 @@ func setProcfsValue(path string, value string, dryRun bool) error {
     if dryRun {
       log.Warnf("Could not read file: %s", err)
     } else {
-    return fmt.Errorf("Could not read file: %s", err)
+      return fmt.Errorf("Could not read file: %s", err)
+    }
   }
   
   // Remove trailing \n if it exists
