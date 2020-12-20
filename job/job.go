@@ -232,11 +232,10 @@ func paramPermutations(param *JobParam) ([]TaskParam, error) {
     return parseParamInt(param)
   case "integer":
     return parseParamInt(param)
-  default:
-    return nil, fmt.Errorf(
-      "Unknown parameter type: %s", t,
-    )
   }
+  return nil, fmt.Errorf(
+    "Unknown parameter type: \"%s\" for %s", param.Type, param.Name,
+  )
 }
 
 // nextTask recursively iterates across paramters to generate a set of tasks
