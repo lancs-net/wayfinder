@@ -103,6 +103,8 @@ func doRunCmd(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
+  setupInterruptHandler()
+
   // Prepare environment
   err = run.PrepareEnvironment(cpus, runConfig.DryRun)
   if err != nil {
