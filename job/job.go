@@ -222,6 +222,8 @@ func parseParamInt(param *JobParam) ([]TaskParam, error) {
   return params, nil
 }
 
+// paramPermutations discovers all the possible variants of a particular
+// parameter based on its type and options.
 func paramPermutations(param *JobParam) ([]TaskParam, error) {
   switch t := param.Type; t {
   case "string":
