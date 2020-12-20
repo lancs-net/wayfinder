@@ -40,3 +40,17 @@ type CoreMap struct {
   sync.RWMutex
   cores map[int]*ActiveTaskRun
 }
+
+// CoreMap creates a fixed-length map of cores with their ID as index.
+func NewCoreMap(cores []int) *CoreMap {
+  coreMap := &CoreMap{
+    cores: make(map[int]*ActiveTaskRun, len(cores)),
+  }
+
+  // Add the core ID as index to the map
+  for i := 0; i < len(cores); i++ {
+    coreMap.cores[cores[i]] = nil
+  }
+
+  return coreMap
+}
