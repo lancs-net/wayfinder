@@ -90,6 +90,8 @@ func NewJob(filePath string) (*Job, error) {
     return nil, fmt.Errorf("File does not exist: %s", filePath)
   }
 
+  log.Debugf("Reading job configuration: %s", filePath)
+
   // Slurp the file contents into memory
   dat, err := ioutil.ReadFile(filePath)
   if err != nil {
