@@ -94,3 +94,11 @@ func (cm *CoreMap) Get(coreId int) *ActiveTaskRun {
   
   return atr
 }
+
+// Unset updates the core ID to be free
+func (cm *CoreMap) Unset(coreId int) {
+  cm.Lock()
+  log.Debugf("Releasing coreId=%d", coreId)
+  cm.cores[coreId] = nil
+  cm.Unlock()
+}
