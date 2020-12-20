@@ -120,14 +120,47 @@ func NewJob(filePath string, cfg *RuntimeConfig) (*Job, error) {
     return nil, err
   }
 
-  log.Debugf("Read in job configuration: %s", filePath)
+  log.Info("Calculating number of tasks...")
+
+  // Create all tasks for job, iterating over all possible parameter 
+  // permutations
+  tasks, err := job.tasks()
+  if err != nil {
+    return nil, err
+  }
+
+  // Create a queue of size equal to the number of cores to eventually use
+  job.waitList = NewList(len(tasks))
+
+  // Iterate over all the tasks, check if the run is stasifyable, initialize the
+  // task and add it to the waiting list.
+  for _, task := range tasks {
+    for i, run := range job.Runs {
+      // Check if this particular run has requested more cores than what is
+      if run.Cores > len(cfg.Cpus) {
+        return nil, fmt.Errorf(
+          "Run has too many cores: %s: %d > %d",
+          run.Name,
+          run.Cores,
+          len(cfg.Cpus),
+        )
+
+      // Set the default number of cores to use
+      } else if run.Cores == 0 {
+        job.Runs[i].Cores = 1
+      }
+    }
+
+    task.Init(&job.Runs)
+    job.waitList.Add(task)
+  }
+
+  log.Debugf("There are total %d tasks", job.waitList.Len())
+
+  // Prepare a map of cores to hold onto a particular task's run
+  tasksInFlight = NewCoreMap(cfg.Cpus)
 
   return &job, nil
-}
-
-// RuntimeConfig contains details about the runtime of ukbench
-type RuntimeConfig struct {
-  Cpus []int
 }
 
 // parseParamInt attends to string parameters and its possible permutations
