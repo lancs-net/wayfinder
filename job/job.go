@@ -117,6 +117,7 @@ type RuntimeConfig struct {
   Cpus []int
 }
 
+// parseParamInt attends to string parameters and its possible permutations
 func parseParamStr(param *JobParam) ([]TaskParam, error) {
   var params []TaskParam
 
