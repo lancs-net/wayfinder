@@ -114,3 +114,9 @@ type List struct {
   sync.RWMutex
   items []interface{}
 }
+
+// NewList creates a generic out-of-order concurrency-safe array.
+func NewList(capacity int) *List {
+  list := &List{}
+  return list
+}
