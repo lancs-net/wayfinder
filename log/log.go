@@ -130,3 +130,19 @@ func (l *Logger) Debug(messages ...interface{}) {
 func (l *Logger) Debugf(format string, messages ...interface{}) {
   l.log(DEBUG, format, messages...)
 }
+
+func Info(messages ...interface{}) {
+  logger.log(INFO, "%s", messages...)
+}
+
+func Infof(format string, messages ...interface{}) {
+  logger.log(INFO, format, messages...)
+}
+
+func (l *Logger) Info(messages ...interface{}) {
+  l.log(INFO, "%s", messages...)
+}
+
+func (l *Logger) Infof(format string, messages ...interface{}) {
+  l.log(INFO, format, messages...)
+}
