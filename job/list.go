@@ -67,3 +67,17 @@ func (cm *CoreMap) FreeCores() []int {
   cm.RUnlock()
   return free
 }
+
+// Set updates the core ID with the task which is actively using it
+func (cm *CoreMap) Set(coreId int, atr *ActiveTaskRun) error {
+  cm.Lock()
+  if cm.cores[coreId] != nil {
+    cm.Unlock()
+    return fmt.Errorf("Core already in use by: %#v", cm.cores[coreId])
+  }
+
+  log.Debugf("Reserving coreId=%d", coreId)
+  cm.cores[coreId] = atr
+  cm.Unlock()
+  return nil
+}
