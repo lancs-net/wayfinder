@@ -120,3 +120,10 @@ func NewList(capacity int) *List {
   list := &List{}
   return list
 }
+
+// Add to the list
+func (l *List) Add(item interface{}) {
+  l.RLock()
+  l.items = append(l.items, item)
+  l.RUnlock()
+}
