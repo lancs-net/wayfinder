@@ -91,12 +91,16 @@ endif
 $(.PROXY)all: build
 
 .PHONY: build
+ifeq ($(DEBUG),y)
+$(.PROXY)build: GO_GCFLAGS ?= -N -l
+endif
 $(.PROXY)build: GO_LDFLAGS ?= -s -w
 $(.PROXY)build: GO_LDFLAGS += -X "main.version=$(APP_VERSION)"
 $(.PROXY)build: GO_LDFLAGS += -X "main.commit=$(GIT_SHA)"
 $(.PROXY)build: GO_LDFLAGS += -X "main.buildTime=$(shell date)"
 $(.PROXY)build:
 	$(GO) build \
+		-ldflags='$(GO_GCFLAGS)' \
 		-ldflags='$(GO_LDFLAGS)' \
 		-o $(DISTDIR)/$(BIN)
 
