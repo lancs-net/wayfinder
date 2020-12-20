@@ -178,3 +178,19 @@ func (l *Logger) Error(messages ...interface{}) {
 func (l *Logger) Errorf(format string, messages ...interface{}) {
   l.log(ERROR, format, messages...)
 }
+
+func Fatal(messages ...interface{}) {
+  logger.log(FATAL, "%s", messages...)
+}
+
+func Fatalf(format string, messages ...interface{}) {
+  logger.log(FATAL, format, messages...)
+}
+
+func (l *Logger) Fatal(messages ...interface{}) {
+  l.log(FATAL, "%s", messages...)
+}
+
+func (l *Logger) Fatalf(format string, messages ...interface{}) {
+  l.log(FATAL, format, messages...)
+}
