@@ -102,14 +102,12 @@ $(.PROXY)build:
 
 # Create an environment where we can build
 .PHONY: container
-container: ALPINE_VERSION     ?= 3.12
 container: GO_VERSION         ?= 1.14
 container: DOCKER_BUILD_EXTRA ?=
 container:
 	$(DOCKER) build \
 		--build-arg ORG=$(ORG) \
 		--build-arg BIN=$(BIN) \
-		--build-arg ALPINE_VERSION=$(ALPINE_VERSION) \
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		--tag $(IMAGE) \
 		$(DOCKER_BUILD_EXTRA) $(WORKDIR)

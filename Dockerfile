@@ -30,17 +30,18 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 ARG GO_VERSION=1.14
-ARG ALPINE_VERSION=3.12
 
-FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS base
+FROM golang:${GO_VERSION}-stretch AS base
 
 ARG ORG=lancs-net
 ARG BIN=ukbench
 
 RUN set -xe; \
-    apk --no-cache add \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+      build-essential \
       make \
-      git
+      git;
 
 COPY . /go/src/github.com/${ORG}/${BIN}
 WORKDIR /go/src/github.com/${ORG}/${BIN}
