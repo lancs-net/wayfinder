@@ -84,6 +84,11 @@ type RuntimeConfig struct {
   Cpus          []int
 }
 
+// tasksInFlight represents the maximum tasks which are actively running
+// concurrently.  When a tasks is completed, it will leave this list and a
+// new task can join.
+var tasksInFlight *CoreMap
+
 // NewJob prepares a job yaml file
 func NewJob(filePath string, cfg *RuntimeConfig) (*Job, error) {
   // Check if the path is set
