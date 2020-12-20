@@ -80,3 +80,11 @@ func (t *Task) UUID() string {
 
   return t.uuid
 }
+
+// ActiveTaskRun contains information about a particular task's run.
+type ActiveTaskRun struct {
+  Task     *Task
+  run      *Run
+  CoreIds []int // the exact core numbers this task is using
+  log      *log.Logger
+}
