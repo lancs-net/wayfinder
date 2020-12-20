@@ -114,3 +114,19 @@ func SetLevel(level LogLevel) {
 func GetLevel() LogLevel {
   return logger.LogLevel
 }
+
+func Debug(messages ...interface{}) {
+  logger.log(DEBUG, "%s", messages...)
+}
+
+func Debugf(format string, messages ...interface{}) {
+  logger.log(DEBUG, format, messages...)
+}
+
+func (l *Logger) Debug(messages ...interface{}) {
+  l.log(DEBUG, "%s", messages...)
+}
+
+func (l *Logger) Debugf(format string, messages ...interface{}) {
+  l.log(DEBUG, format, messages...)
+}
