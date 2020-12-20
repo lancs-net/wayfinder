@@ -42,6 +42,7 @@ type Task struct {
   Inputs  *[]Input
   Outputs *[]Output
   runs      *Queue
+  uuid       string
 }
 
 // Init prepare the task 
@@ -63,4 +64,19 @@ func (t *Task) Cancel() {
 
   // Clear queue of subsequent runs
   t.runs.Clear()
+}
+
+func (t *Task) UUID() string {
+  if len(t.uuid) == 0 {
+
+    // Calculate the UUID based on a reproducible md5 seed
+    md5val := md5.New()
+    for _, param := range t.Params {
+      io.WriteString(md5val, fmt.Sprintf("%s=%s\n", param.Name, param.Value))
+    }
+
+    t.uuid = fmt.Sprintf("%x", md5val.Sum(nil))
+  }
+
+  return t.uuid
 }
