@@ -54,3 +54,16 @@ func NewCoreMap(cores []int) *CoreMap {
 
   return coreMap
 }
+
+// Retrieve a list of core numbers whch are free
+func (cm *CoreMap) FreeCores() []int {
+  var free []int
+  cm.RLock()
+  for i, _ := range cm.cores {
+    if cm.cores[i] == nil {
+      free = append(free, i)
+    }
+  }
+  cm.RUnlock()
+  return free
+}
