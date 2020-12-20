@@ -253,3 +253,17 @@ func (st *Queue) Unlock() {
 func (st *Queue) IsLocked() bool {
   return len(st.lockChan) >= 1
 }
+
+// Clear the queue empties it
+func (st *Queue) Clear() error {
+  if st.IsLocked() {
+    return NewQueueError(
+      QueueErrorCodeLockedQueue,
+      "The queue is locked",
+    )
+  }
+
+  st.initialize()
+
+  return nil
+}
