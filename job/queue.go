@@ -217,8 +217,8 @@ func (st *Queue) DequeueOrWaitForNextElementContext(ctx context.Context) (interf
   }
 }
 
-// GetLen returns queue's length (total enqueued elements)
-func (st *Queue) GetLen() int {
+// Len returns queue's length (total enqueued elements)
+func (st *Queue) Len() int {
   st.Lock()
   defer st.Unlock()
 
