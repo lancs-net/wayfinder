@@ -41,4 +41,18 @@ type Task struct {
   Params   []TaskParam
   Inputs  *[]Input
   Outputs *[]Output
+  runs      *Queue
+}
+
+// Init prepare the task 
+func (t *Task) Init(runs *[]Run) error {
+  // Create a queue of runs for this particular task
+  t.runs = NewQueue(len(*runs))
+
+  // Add the runs in-order
+  for _, run := range *runs {
+    t.runs.Enqueue(run)
+  }
+
+  return nil
 }
