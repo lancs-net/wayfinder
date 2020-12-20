@@ -146,3 +146,19 @@ func (l *Logger) Info(messages ...interface{}) {
 func (l *Logger) Infof(format string, messages ...interface{}) {
   l.log(INFO, format, messages...)
 }
+
+func Warn(messages ...interface{}) {
+  logger.log(WARNING, "%s", messages...)
+}
+
+func Warnf(format string, messages ...interface{}) {
+  logger.log(WARNING, format, messages...)
+}
+
+func (l *Logger) Warn(messages ...interface{}) {
+  l.log(WARNING, "%s", messages...)
+}
+
+func (l *Logger) Warnf(format string, messages ...interface{}) {
+  l.log(WARNING, format, messages...)
+}
