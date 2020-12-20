@@ -113,9 +113,12 @@ func doRunCmd(cmd *cobra.Command, args []string) {
     os.Exit(1)
   }
 
-  j.Start(&job.RuntimeConfig{
-    Cpus: cpus,
-  })
+  // Start the job with its various tasks
+  err = j.Start()
+  if err != nil {
+    log.Errorf("Could not start job: %s", err)
+    cleanup()
+  }
 
   // We're all done now
   cleanup()
