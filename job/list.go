@@ -108,3 +108,9 @@ func (cm *CoreMap) Unset(coreId int) {
 func (cm *CoreMap) All() map[int]*ActiveTaskRun {
   return cm.cores
 }
+
+// List holds onto a generic out-of-order concurrency-safe array.
+type List struct {
+  sync.RWMutex
+  items []interface{}
+}
