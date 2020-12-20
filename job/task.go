@@ -110,3 +110,9 @@ func NewActiveTaskRun(task *Task, run Run, coreIds []int) (*ActiveTaskRun, error
 func (atr *ActiveTaskRun) UUID() string {
   return fmt.Sprintf("%s-%s", atr.Task.UUID(), atr.run.Name)
 }
+
+// Start the task's run
+func (atr *ActiveTaskRun) Start() (int, error) {
+  // TODO: Start the run based on its parameters
+  return 0, nil
+}
