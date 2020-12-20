@@ -47,3 +47,13 @@ type Logger struct{
   LogLevel LogLevel
   Prefix   string
 }
+
+var (
+  logger *Logger
+)
+
+func init() {
+  logger = &Logger{
+    LogLevel: INFO,
+  }
+}
