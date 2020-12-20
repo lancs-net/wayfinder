@@ -84,6 +84,42 @@ func (st *Queue) initialize() {
   )
 }
 
+// Peak looks at the next element in the Queue without removing it.
+// Returns error if the queue is empty or internal channel is closed.
+func (st *Queue) Peak() (interface{}, error) {
+	select {
+	case value, ok := <-st.queue:
+		if ok {
+      // This is quite lazy and inefficient...
+      // remove everything from the queue and add it to a new queue in-order.
+      newQueue := make(chan interface{}, st.capacity)
+      newQueue <- value
+
+      select {
+      case elem, ok := <-st.queue:
+        if ok {
+          newQueue <- elem
+        }
+      default:
+        break
+      }
+
+      st.queue = newQueue
+      newQueue = nil
+			return value, nil
+		}
+		return nil, NewQueueError(
+      QueueErrorCodeInternalChannelClosed,
+      "internal channel is closed",
+    )
+	default:
+		return nil, NewQueueError(
+      QueueErrorCodeEmptyQueue,
+      "empty queue",
+    )
+	}
+}
+
 // Enqueue enqueues an element. Returns error if queue is locked or it is at
 // full capacity.
 func (st *Queue) Enqueue(value interface{}) error {
