@@ -127,3 +127,19 @@ func (l *List) Add(item interface{}) {
   l.items = append(l.items, item)
   l.RUnlock()
 }
+
+// Remove from the list
+func (l *List) Remove(i int) interface{} {
+  l.RLock()
+
+  if i > len(l.items) {
+    return nil
+  }
+
+  ret := l.items[i]  
+  l.items = append(l.items[:i], l.items[i+1:]...)
+
+  l.RUnlock()
+
+  return ret
+}
