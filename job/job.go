@@ -77,11 +77,13 @@ type Job struct {
   Outputs       []Output   `yaml:"outputs"`
   Runs          []Run      `yaml:"runs"`
   waitList     *List
+  scheduleGrace int
 }
 
 // RuntimeConfig contains details about the runtime of ukbench
 type RuntimeConfig struct {
   Cpus          []int
+  ScheduleGrace   int
 }
 
 // tasksInFlight represents the maximum tasks which are actively running
@@ -131,6 +133,9 @@ func NewJob(filePath string, cfg *RuntimeConfig) (*Job, error) {
 
   // Create a queue of size equal to the number of cores to eventually use
   job.waitList = NewList(len(tasks))
+
+  // Set the schedule grace time
+  job.scheduleGrace = cfg.ScheduleGrace
 
   // Iterate over all the tasks, check if the run is stasifyable, initialize the
   // task and add it to the waiting list.

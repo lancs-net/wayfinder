@@ -46,8 +46,9 @@ import (
 )
 
 type RunConfig struct {
-  CpuSets string
-  DryRun  bool
+  CpuSets       string
+  DryRun        bool
+  ScheduleGrace int
 }
 
 var (
@@ -75,6 +76,13 @@ func init() {
     false,
     "Run without affecting the host or running the jobs.",
   )
+  runCmd.PersistentFlags().IntVarP(
+    &runConfig.ScheduleGrace,
+    "schedule-grace-time",
+    "g",
+    1,
+    "Number of seconds to gracefully wait in the scheduler.",
+  )
 }
 
 // doRunCmd 
@@ -88,6 +96,7 @@ func doRunCmd(cmd *cobra.Command, args []string) {
 
 	j, err := job.NewJob(args[0], &job.RuntimeConfig{
     Cpus:          cpus,
+    ScheduleGrace: runConfig.ScheduleGrace,
   })
 	if err != nil {
 		log.Fatalf("Could not read configuration: %s", err)
