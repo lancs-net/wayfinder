@@ -88,3 +88,8 @@ type ActiveTaskRun struct {
   CoreIds []int // the exact core numbers this task is using
   log      *log.Logger
 }
+
+// UUID returns the Unique ID for the task and run
+func (atr *ActiveTaskRun) UUID() string {
+  return fmt.Sprintf("%s-%s", atr.Task.UUID(), atr.run.Name)
+}
