@@ -162,3 +162,19 @@ func (l *Logger) Warn(messages ...interface{}) {
 func (l *Logger) Warnf(format string, messages ...interface{}) {
   l.log(WARNING, format, messages...)
 }
+
+func Error(messages ...interface{}) {
+  logger.log(ERROR, "%s", messages...)
+}
+
+func Errorf(format string, messages ...interface{}) {
+  logger.log(ERROR, format, messages...)
+}
+
+func (l *Logger) Error(messages ...interface{}) {
+  l.log(ERROR, "%s", messages...)
+}
+
+func (l *Logger) Errorf(format string, messages ...interface{}) {
+  l.log(ERROR, format, messages...)
+}
