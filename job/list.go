@@ -143,3 +143,15 @@ func (l *List) Remove(i int) interface{} {
 
   return ret
 }
+
+// Len returns the length of the list
+func (l *List) Len() int {
+  l.RLock()
+  if l.items == nil {
+    l.RUnlock()
+    return 0
+  }
+  ret := len(l.items)
+  l.RUnlock()
+  return ret
+}
