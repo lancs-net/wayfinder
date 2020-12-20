@@ -102,3 +102,9 @@ func (cm *CoreMap) Unset(coreId int) {
   cm.cores[coreId] = nil
   cm.Unlock()
 }
+
+// All returns a list of all of the cores and its tasks
+// TODO: Concurrency tests
+func (cm *CoreMap) All() map[int]*ActiveTaskRun {
+  return cm.cores
+}
