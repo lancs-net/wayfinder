@@ -30,6 +30,12 @@ package job
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+import (
+  "io"
+  "fmt"
+	"crypto/md5"
+)
+
 type TaskParam struct {
   Name  string
   Type  string
