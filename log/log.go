@@ -106,3 +106,11 @@ func (l *Logger) log(level LogLevel, format string, messages ...interface{}) {
     fmt.Printf("[%s] %s\n", out, fmt.Sprintf(format, messages...))
   }
 }
+
+func SetLevel(level LogLevel) {
+  logger.LogLevel = level
+}
+
+func GetLevel() LogLevel {
+  return logger.LogLevel
+}
