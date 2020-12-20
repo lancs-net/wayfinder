@@ -140,6 +140,7 @@ func parseParamStr(param *JobParam) ([]TaskParam, error) {
   return params, nil
 }
 
+// parseParamInt attends to integer parameters and its possible permutations
 func parseParamInt(param *JobParam) ([]TaskParam, error) {
   var params []TaskParam
 
