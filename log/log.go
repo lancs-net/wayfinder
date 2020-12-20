@@ -30,6 +30,12 @@ package log
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+import (
+  "fmt"
+
+  "github.com/muesli/termenv"
+)
+
 // LogLevel is an enum-like type that we can use to designate the log level
 type LogLevel int
 
@@ -55,5 +61,48 @@ var (
 func init() {
   logger = &Logger{
     LogLevel: INFO,
+  }
+}
+
+// log is a private function that manages the internal logic about what and how
+// to log data depending on the log level.
+func (l *Logger) log(level LogLevel, format string, messages ...interface{}) {
+  var logType string
+  var logColor termenv.ANSIColor
+  switch level {
+  case DEBUG:
+    logType = "DEBU"
+    logColor = termenv.ANSICyan
+    break
+  case WARNING:
+    logType = "WARN"
+    logColor = termenv.ANSIYellow
+    break
+  case ERROR:
+    logType = "ERRO"
+    logColor = termenv.ANSIRed
+    break
+  case FATAL:
+    logType = "FATA"
+    logColor = termenv.ANSIRed
+    break
+  default:
+    logType = "INFO"
+    logColor = termenv.ANSIBlue
+    break
+  }
+
+  if level < l.LogLevel {
+    return
+  }
+
+  // Add some colours!
+  out := termenv.String(logType)
+  out = out.Foreground(logColor)
+
+  if len(l.Prefix) > 0 {
+    fmt.Printf("[%s][%s] %s\n", out, l.Prefix, fmt.Sprintf(format, messages...))
+  } else {
+    fmt.Printf("[%s] %s\n", out, fmt.Sprintf(format, messages...))
   }
 }
