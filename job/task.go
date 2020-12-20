@@ -56,3 +56,11 @@ func (t *Task) Init(runs *[]Run) error {
 
   return nil
 }
+
+// Cancel the task by removing everything from the queue
+func (t *Task) Cancel() {
+  log.Warnf("Cancelling task and all subsequent runs")
+
+  // Clear queue of subsequent runs
+  t.runs.Clear()
+}
