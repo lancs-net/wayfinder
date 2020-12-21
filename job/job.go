@@ -414,7 +414,7 @@ func (j *Job) Start() error {
         goto iterator
       }
 
-      log.Infof("Scheduling task run %s-%s...", task.(*Task).UUID(), nextRun.(Run).Name)
+      log.Infof("Scheduling task run %s...", activeTaskRun.UUID())
 
       // Finally, we can dequeue the run since we are about to schedule it
       nextRun, err = task.(*Task).runs.Dequeue()
