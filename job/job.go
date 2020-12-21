@@ -163,7 +163,7 @@ func NewJob(filePath string, cfg *RuntimeConfig) (*Job, error) {
     job.waitList.Add(task)
   }
 
-  log.Debugf("There are total %d tasks", job.waitList.Len())
+  log.Infof("There are total %d tasks", job.waitList.Len())
 
   // Prepare a map of cores to hold onto a particular task's run
   tasksInFlight = NewCoreMap(cfg.Cpus)
@@ -470,8 +470,7 @@ func (j *Job) Start() error {
 
         // Set the return code
 
-
-        log.Debugf("Run finished: %s", activeTaskRun.UUID())
+        log.Infof("Run finished: %s", activeTaskRun.UUID())
         wg.Done() // We're done here
 
         // Remove utilized cores from this active task's run
