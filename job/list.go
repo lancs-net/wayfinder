@@ -107,7 +107,8 @@ func (cm *CoreMap) Unset(coreId int) {
 }
 
 // All returns a list of all of the cores and its tasks
-// TODO: Concurrency tests
+// Warning: Concurrency should now be handled by the routine which uses this
+// method.
 func (cm *CoreMap) All() map[int]*ActiveTaskRun {
   return cm.cores
 }

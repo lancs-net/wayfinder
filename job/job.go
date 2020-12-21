@@ -385,15 +385,18 @@ func (j *Job) Start() error {
     // ordering of the iterator `i`
     } else if len(freeCores) >= nextRun.(Run).Cores {
       // Check if the peaked run is currently active
+      tasksInFlight.RLock()
       for _, atr := range tasksInFlight.All() {
         if atr != nil {
           if atr.Task.UUID() == task.(*Task).UUID() {
+            tasksInFlight.RUnlock()
             goto iterator
           }
         }
       }
 
       log.Infof("Scheduling task run %s-%s...", task.(*Task).UUID(), nextRun.(Run).Name)
+      tasksInFlight.RUnlock()
 
       // Select some core IDs for this run based on how many it requires
       var cores []int
