@@ -1,14 +1,27 @@
+# Expected permutations of A and B:
+#
+# 1 Hello
+# 1 World
+# 2 Hello
+# 2 World
+# 3 Hello
+# 3 World
+# 4 Hello
+# 4 World
+
 params:
-  - name: TEST_STRING
-    type: string
-    default: "hello"
-
-  - name: TEST_INT
-    type: int
+  - name: A
+    type: integer
     min: 1
-    max: 5
+    max: 4
 
-run:
-  cmd:
-    |
-    echo $TEST
+  - name: B
+    type: string
+    only: ["Hello", "World"]
+
+runs:
+  - name: echo
+    image: runc://debian:stretch
+    cmd:
+      |
+      echo $A $B
