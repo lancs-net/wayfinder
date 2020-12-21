@@ -394,8 +394,6 @@ func (j *Job) Start() error {
           }
         }
       }
-
-      log.Infof("Scheduling task run %s-%s...", task.(*Task).UUID(), nextRun.(Run).Name)
       tasksInFlight.RUnlock()
 
       // Select some core IDs for this run based on how many it requires
@@ -415,6 +413,8 @@ func (j *Job) Start() error {
         task.(*Task).Cancel()
         goto iterator
       }
+
+      log.Infof("Scheduling task run %s-%s...", task.(*Task).UUID(), nextRun.(Run).Name)
 
       // Finally, we can dequeue the run since we are about to schedule it
       nextRun, err = task.(*Task).runs.Dequeue()
