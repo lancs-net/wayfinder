@@ -363,7 +363,7 @@ func (j *Job) Start() error {
     // particular task's run so we can decide whether to schedule it.
     freeCores = tasksInFlight.FreeCores()
     if len(freeCores) == 0 {
-      log.Infof("No free cores, waiting...")
+      continue
     }
 
     // Get the next job from the task's job queue
