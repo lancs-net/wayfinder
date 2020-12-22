@@ -73,7 +73,7 @@ type Image struct {
   Tag        string
 }
 
-func Parse(s string) (Reference, error) {
+func Parse(s string) (*Image, error) {
 	matches := ReferenceRegexp.FindStringSubmatch(s)
 	if matches == nil {
 		if s == "" {
@@ -87,24 +87,11 @@ func Parse(s string) (Reference, error) {
 		return nil, ErrNameTooLong
 	}
 
-	ref := reference{
-		runtime: matches[2],
-		name:    matches[3],
-		tag:     matches[4],
+	image := &Image{
+		Runtime: matches[2],
+		Name:    matches[3],
+		Tag:     matches[4],
 	}
 
-	if matches[5] != "" {
-		var err error
-		ref.digest, err = digest.ParseDigest(matches[5])
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	r := getBestReferenceType(ref)
-	if r == nil {
-		return nil, ErrNameEmpty
-	}
-
-	return r, nil
+	return image, nil
 }
