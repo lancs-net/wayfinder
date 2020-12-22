@@ -28,6 +28,14 @@ import (
 const (
 	// NameTotalLengthMax is the maximum total number of characters in a repository name.
 	NameTotalLengthMax = 255
+  // DefaultTag defines the default tag used when performing images related actions and no tag or digest is specified
+  DefaultTag = "latest"
+  // DefaultHostname is the default built-in hostname
+  DefaultHostname = "docker.io"
+  // LegacyDefaultHostname is automatically converted to DefaultHostname
+  LegacyDefaultHostname = "index.docker.io"
+  // DefaultRepoPrefix is the prefix used for default repositories in default host
+  DefaultRepoPrefix = "library/"
 )
 
 var (
