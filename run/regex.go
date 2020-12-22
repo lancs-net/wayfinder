@@ -50,6 +50,13 @@ var (
 	// end of the matched string.
 	anchoredDigestRegexp = anchored(DigestRegexp)
 
+	// RuntimeRegexp
+	RuntimeRexp = expression(
+		optional(capture(alphaRegexp), literal(`://`)))
+
+	// anchoredRuntimeRegexp matches valid runtime
+	anchoredRuntimeRexp = anchored(RuntimeRexp)
+
 	// NameRegexp is the format for the name component of references. The
 	// regexp has capturing groups for the hostname and name part omitting
 	// the separating forward slash from either.
