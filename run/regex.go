@@ -3,6 +3,9 @@ package run
 import "regexp"
 
 var (
+	// alphaRegexp defines the alphabetical atom, typically a single word.
+	alphaRegexp = match(`\w+`)
+
 	// alphaNumericRegexp defines the alpha numeric atom, typically a
 	// component of names. This only allows lower case characters and digits.
 	alphaNumericRegexp = match(`[a-z0-9]+`)
