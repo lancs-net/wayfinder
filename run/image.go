@@ -69,6 +69,8 @@ type Image struct {
 	Hostname   string
 	// RemoteName is the the repository component of the full name, like "library/ubuntu"
 	RemoteName string
+  // Tag is the tag of the image, e.g. "latest"
+  Tag        string
 }
 
 func Parse(s string) (Reference, error) {
