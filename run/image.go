@@ -20,6 +20,33 @@ package run
 // If an error was encountered it is returned, along with a nil Reference.
 // NOTE: Parse will not handle short digests.
 
+import (
+  "fmt"
+  "errors"
+)
+
+const (
+	// NameTotalLengthMax is the maximum total number of characters in a repository name.
+	NameTotalLengthMax = 255
+)
+
+var (
+	// ErrReferenceInvalidFormat represents an error while trying to parse a string as a reference.
+	ErrReferenceInvalidFormat = errors.New("invalid reference format")
+
+	// ErrTagInvalidFormat represents an error while trying to parse a string as a tag.
+	ErrTagInvalidFormat = errors.New("invalid tag format")
+
+	// ErrDigestInvalidFormat represents an error while trying to parse a string as a tag.
+	ErrDigestInvalidFormat = errors.New("invalid digest format")
+
+	// ErrNameEmpty is returned for empty, invalid repository names.
+	ErrNameEmpty = errors.New("repository name must have at least one component")
+
+	// ErrNameTooLong is returned when a repository name is longer than NameTotalLengthMax.
+	ErrNameTooLong = fmt.Errorf("repository name must not be more than %v characters", NameTotalLengthMax)
+)
+
 func Parse(s string) (Reference, error) {
 	matches := ReferenceRegexp.FindStringSubmatch(s)
 	if matches == nil {
