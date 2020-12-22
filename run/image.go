@@ -55,6 +55,20 @@ var (
 	ErrNameTooLong = fmt.Errorf("repository name must not be more than %v characters", NameTotalLengthMax)
 )
 
+// Named is an object with a full name
+type Named interface {
+	// Name returns normalized repository name, like "ubuntu".
+	Name() string
+	// String returns full reference, like "ubuntu@sha256:abcdef..."
+	String() string
+	// FullName returns full repository name with hostname, like "docker.io/library/ubuntu"
+	FullName() string
+	// Hostname returns hostname for the reference, like "docker.io"
+	Hostname() string
+	// RemoteName returns the repository component of the full name, like "library/ubuntu"
+	RemoteName() string
+}
+
 func Parse(s string) (Reference, error) {
 	matches := ReferenceRegexp.FindStringSubmatch(s)
 	if matches == nil {
