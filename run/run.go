@@ -48,7 +48,7 @@ func ParseRunImage(image string) (RunnerType, error) {
     return EMPTY, fmt.Errorf("Image definition empty")
   }
 
-  ref, err := Parse(image)
+  ref, err := ParseImageName(image)
   if err != nil {
     return UNKNOWN, err
   }

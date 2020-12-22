@@ -75,7 +75,7 @@ type Image struct {
   Tag        string
 }
 
-func Parse(s string) (*Image, error) {
+func ParseImageName(s string) (*Image, error) {
 	matches := ReferenceRegexp.FindStringSubmatch(s)
 	if matches == nil {
 		if s == "" {
