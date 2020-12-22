@@ -57,6 +57,8 @@ var (
 
 // Image is an object with a full name
 type Image struct {
+  // Runtime is the normalized name of the runtime service, e.g. "docker"
+  Runtime    string
 	// Name is the normalized repository name, like "ubuntu".
 	Name       string
 	// String is the full reference, like "ubuntu@sha256:abcdef..."
