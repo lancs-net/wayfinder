@@ -26,6 +26,8 @@ import (
 )
 
 const (
+  // DefaultRuntime is the runtime to use when not specified.
+  DefaultRuntime = "runc"
 	// NameTotalLengthMax is the maximum total number of characters in a repository name.
 	NameTotalLengthMax = 255
   // DefaultTag defines the default tag used when performing images related actions and no tag or digest is specified
