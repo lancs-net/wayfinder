@@ -31,65 +31,34 @@ package run
 // POSSIBILITY OF SUCH DAMAGE.
 
 import (
-  "fmt"
+  "github.com/opencontainers/runc/libcontainer"
 
   "github.com/lancs-net/ukbench/log"
 )
 
-type RunnerType int
-
-const (
-  UNKNOWN RunnerType = iota
-  EMPTY
-  RUNC
-)
-
-type RunnerConfig struct {
-  Log      *log.Logger
-  WorkDir   string
-  Image     string
-  CpuSets []int
-  Devices []string
-  Path      string
-  Cmd       string
+type RuncRunner struct {
+  log    *log.Logger
+  Config *RunnerConfig
+  factory libcontainer.Factory
 }
 
-type Runner interface {
-  Init()     error
-  Start()    error
-  Wait()    (int, error)
-  Destroy()  error
+func (r RuncRunner) Init() error {
+  // Set the logger
+  r.log = r.Config.Log
+
+  r.log.Debug("Initializing runc...")
+
+  return nil
 }
 
-// NewRunner returns the name of the 
-func NewRunner(image string, cfg *RunnerConfig) (Runner, error) {
-  if len(image) == 0 {
-    return nil, fmt.Errorf("Image definition empty")
-  }
+func (r RuncRunner) Start() error {
+  return nil
+}
 
-  ref, err := ParseImageName(image)
-  if err != nil {
-    return nil, err
-  }
+func (r RuncRunner) Wait() (int, error) {
+  return 0, nil
+}
 
-  if len(ref.Runtime) == 0 {
-    ref.Runtime = DefaultRuntime
-  }
-
-  var runner Runner
-  switch runtime := ref.Runtime; runtime {
-	case "runc":
-    runner = RuncRunner{
-      Config: cfg,
-    }
-	default:
-    return nil, fmt.Errorf("Unsupported container runtime: %s", runtime)
-	}
-
-  err = runner.Init()
-  if err != nil {
-    return nil, err
-  }
-
-  return runner, nil
+func (r RuncRunner) Destroy() error {
+  return nil
 }
