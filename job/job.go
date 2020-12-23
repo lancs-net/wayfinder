@@ -88,6 +88,7 @@ type RuntimeConfig struct {
   Cpus          []int
   ScheduleGrace   int
   WorkDir         string
+  AllowOverride   bool
 }
 
 // tasksInFlight represents the maximum tasks which are actively running
