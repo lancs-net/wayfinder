@@ -49,6 +49,7 @@ type RunConfig struct {
   CpuSets       string
   DryRun        bool
   ScheduleGrace int
+  WorkDir       string
 }
 
 var (
@@ -83,6 +84,13 @@ func init() {
     1,
     "Number of seconds to gracefully wait in the scheduler.",
   )
+  runCmd.PersistentFlags().StringVarP(
+    &runConfig.WorkDir,
+    "workdir",
+    "w",
+    "",
+    "Specify working directory for outputting results, data, file systems, etc.",
+  )
 }
 
 // doRunCmd 
@@ -94,9 +102,23 @@ func doRunCmd(cmd *cobra.Command, args []string) {
     os.Exit(1)
   }
 
+  // Set the working directory to the current directory if unset
+  if runConfig.WorkDir == "" {
+    runConfig.WorkDir, err = os.Getwd()
+    if err != nil {
+      log.Fatal("Could not use current directory as workdir: ", err)
+      os.Exit(1)
+    }
+  
+  // Check if the set working directory exists, otherwise create it
+  } else if _, err := os.Stat(runConfig.WorkDir); os.IsNotExist(err) {
+    os.MkdirAll(runConfig.WorkDir, os.ModePerm)
+  }
+
 	j, err := job.NewJob(args[0], &job.RuntimeConfig{
     Cpus:          cpus,
     ScheduleGrace: runConfig.ScheduleGrace,
+    WorkDir:       runConfig.WorkDir,
   })
 	if err != nil {
 		log.Fatalf("Could not read configuration: %s", err)

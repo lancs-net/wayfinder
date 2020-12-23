@@ -87,6 +87,7 @@ type Job struct {
 type RuntimeConfig struct {
   Cpus          []int
   ScheduleGrace   int
+  WorkDir         string
 }
 
 // tasksInFlight represents the maximum tasks which are actively running
@@ -159,7 +160,7 @@ func NewJob(filePath string, cfg *RuntimeConfig) (*Job, error) {
       }
     }
 
-    task.Init(&job.Runs)
+    task.Init(cfg.WorkDir, &job.Runs)
     job.waitList.Add(task)
   }
 

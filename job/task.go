@@ -32,7 +32,9 @@ package job
 
 import (
   "io"
+  "os"
   "fmt"
+  "path"
 	"crypto/md5"
 
   "github.com/lancs-net/ukbench/log"
@@ -51,12 +53,19 @@ type Task struct {
   Outputs *[]Output
   runs      *Queue
   uuid       string
+  workDir    string
 }
 
 // Init prepare the task 
-func (t *Task) Init(runs *[]Run) error {
+func (t *Task) Init(workDir string, runs *[]Run) error {
   // Create a queue of runs for this particular task
   t.runs = NewQueue(len(*runs))
+
+  // Create a working directory for this task
+  t.workDir = path.Join(workDir, "results", t.UUID())
+  if _, err := os.Stat(t.workDir); os.IsNotExist(err) {
+    os.MkdirAll(workDir, os.ModePerm)
+  }
 
   // Add the runs in-order
   for _, run := range *runs {
@@ -95,6 +104,7 @@ type ActiveTaskRun struct {
   run      *Run
   CoreIds []int // the exact core numbers this task is using
   log      *log.Logger
+  workDir   string
 }
 
 // NewActiveTaskRun initializes the current task and the run step for the
