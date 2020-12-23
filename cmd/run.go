@@ -50,6 +50,7 @@ type RunConfig struct {
   DryRun        bool
   ScheduleGrace int
   WorkDir       string
+  AllowOverride bool
 }
 
 var (
@@ -91,6 +92,13 @@ func init() {
     "",
     "Specify working directory for outputting results, data, file systems, etc.",
   )
+  runCmd.PersistentFlags().BoolVarP(
+    &runConfig.AllowOverride,
+    "allow-override",
+    "O",
+    false,
+    "Override contents in directories (otherwise tasks allowed to fail).",
+  )
 }
 
 // doRunCmd 
@@ -118,6 +126,7 @@ func doRunCmd(cmd *cobra.Command, args []string) {
 	j, err := job.NewJob(args[0], &job.RuntimeConfig{
     Cpus:          cpus,
     ScheduleGrace: runConfig.ScheduleGrace,
+    AllowOverride: runConfig.AllowOverride,
     WorkDir:       runConfig.WorkDir,
   })
 	if err != nil {

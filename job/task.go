@@ -57,7 +57,7 @@ type Task struct {
 }
 
 // Init prepare the task 
-func (t *Task) Init(workDir string, runs *[]Run) error {
+func (t *Task) Init(workDir string, allowOverride bool, runs *[]Run) error {
   // Create a queue of runs for this particular task
   t.runs = NewQueue(len(*runs))
 

@@ -160,7 +160,7 @@ func NewJob(filePath string, cfg *RuntimeConfig) (*Job, error) {
       }
     }
 
-    task.Init(cfg.WorkDir, &job.Runs)
+    task.Init(cfg.WorkDir, cfg.AllowOverride, &job.Runs)
     job.waitList.Add(task)
   }
 
