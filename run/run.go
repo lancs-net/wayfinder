@@ -32,6 +32,8 @@ package run
 
 import (
   "fmt"
+
+  "github.com/lancs-net/ukbench/log"
 )
 
 type RunnerType int
@@ -42,20 +44,48 @@ const (
   RUNC
 )
 
-// ParseRunImage returns the name of the 
-func ParseRunImage(image string) (RunnerType, error) {
+type RunnerConfig struct {
+  Log      *log.Logger
+  WorkDir   string
+  Image     string
+  CpuSets []int
+  Devices []string
+  Path      string
+  Cmd       string
+}
+
+type Runner interface {
+  Init()     error
+  Start()    error
+  Wait()    (int, error)
+  Destroy()  error
+}
+
+// NewRunner returns the name of the 
+func NewRunner(image string, cfg *RunnerConfig) (Runner, error) {
   if len(image) == 0 {
-    return EMPTY, fmt.Errorf("Image definition empty")
+    return nil, fmt.Errorf("Image definition empty")
   }
 
   ref, err := ParseImageName(image)
   if err != nil {
-    return UNKNOWN, err
+    return nil, err
   }
 
   if len(ref.Runtime) == 0 {
     ref.Runtime = DefaultRuntime
   }
 
-  return UNKNOWN, nil
+  var runner Runner
+  switch runtime := ref.Runtime; runtime {
+	default:
+    return nil, fmt.Errorf("Unsupported container runtime: %s", runtime)
+	}
+
+  err = runner.Init()
+  if err != nil {
+    return nil, err
+  }
+
+  return runner, nil
 }
