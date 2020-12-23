@@ -160,8 +160,12 @@ func NewJob(filePath string, cfg *RuntimeConfig) (*Job, error) {
       }
     }
 
-    task.Init(cfg.WorkDir, cfg.AllowOverride, &job.Runs)
-    job.waitList.Add(task)
+    err := task.Init(cfg.WorkDir, cfg.AllowOverride, &job.Runs)
+    if err != nil {
+      log.Errorf("Could not initialize task: %s", err)
+    } else {
+      job.waitList.Add(task)
+    }
   }
 
   log.Infof("There are total %d tasks", job.waitList.Len())
