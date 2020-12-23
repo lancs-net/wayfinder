@@ -134,3 +134,21 @@ func (atr *ActiveTaskRun) Start() (int, error) {
   // TODO: Start the run based on its parameters
   return 0, nil
 }
+
+// IsDirEmpty is a method used to determine whether a directory is empty
+func IsDirEmpty(path string) (bool, error) {
+  f, err := os.Open(path)
+  if err != nil {
+    return false, err
+  }
+
+  defer f.Close()
+
+  _, err = f.Readdirnames(1) // Or f.Readdir(1)
+  if err == io.EOF {
+    return true, nil
+  }
+
+  // Either not empty or error, suits both cases
+  return false, err
+}
