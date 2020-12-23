@@ -65,17 +65,23 @@ func (t *Task) Init(workDir string, allowOverride bool, runs *[]Run) error {
   // Set the working directory
   t.workDir = path.Join(workDir, "results", t.UUID())
 
-  // Check if we're allowed to override a non-empty directory
-  isEmpty, err := IsDirEmpty(t.workDir)
-  if err != nil {
-    return err
-  }
-  if !isEmpty && !allowOverride {
-    return fmt.Errorf("Task directory not empty: %s", t.workDir)
-  }
+  // Set additional task configuration
+  t.AllowOverride = allowOverride
 
   // Create a working directory for this task
   if _, err := os.Stat(t.workDir); os.IsNotExist(err) {
+    os.MkdirAll(workDir, os.ModePerm)
+
+  // Check if we're allowed to override a non-empty directory
+  } else {
+    isEmpty, err := IsDirEmpty(t.workDir)
+    if err != nil {
+      return err
+    }
+    if !isEmpty && !allowOverride {
+      return fmt.Errorf("Task directory not empty: %s", t.workDir)
+    }
+
     os.MkdirAll(workDir, os.ModePerm)
   }
 
