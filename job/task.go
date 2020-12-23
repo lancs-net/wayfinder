@@ -38,6 +38,7 @@ import (
 	"crypto/md5"
 
   "github.com/lancs-net/ukbench/log"
+  "github.com/lancs-net/ukbench/run"
 )
 
 type TaskParam struct {
@@ -142,7 +143,28 @@ func (atr *ActiveTaskRun) UUID() string {
 
 // Start the task's run
 func (atr *ActiveTaskRun) Start() (int, error) {
-  // TODO: Start the run based on its parameters
+  atr.log.Infof("Initialising run...")
+
+  // Create the run's working directory
+  workDir := path.Join(atr.Task.workDir, atr.run.Name)
+  if _, err := os.Stat(workDir); os.IsNotExist(err) {
+    atr.log.Debugf("Creating directory: %s", workDir)
+    os.MkdirAll(workDir, os.ModePerm)
+  }
+
+  _, err := run.NewRunner(atr.run.Image, &run.RunnerConfig{
+    Log:     atr.log,
+    WorkDir: workDir,
+    Image:   "",
+    CpuSets: []int{},
+    Devices: []string{},
+    Path:    "",
+    Cmd:     "",
+  })
+  if err != nil {
+    return 1, err
+  }
+
   return 0, nil
 }
 
