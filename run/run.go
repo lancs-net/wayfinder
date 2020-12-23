@@ -62,12 +62,8 @@ type Runner interface {
 }
 
 // NewRunner returns the name of the 
-func NewRunner(image string, cfg *RunnerConfig) (Runner, error) {
-  if len(image) == 0 {
-    return nil, fmt.Errorf("Image definition empty")
-  }
-
-  ref, err := ParseImageName(image)
+func NewRunner(cfg *RunnerConfig) (Runner, error) {
+  ref, err := ParseImageName(cfg.Image)
   if err != nil {
     return nil, err
   }

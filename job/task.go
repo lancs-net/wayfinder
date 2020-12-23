@@ -152,10 +152,10 @@ func (atr *ActiveTaskRun) Start() (int, error) {
     os.MkdirAll(workDir, os.ModePerm)
   }
 
-  _, err := run.NewRunner(atr.run.Image, &run.RunnerConfig{
+  _, err := run.NewRunner(&run.RunnerConfig{
     Log:     atr.log,
     WorkDir: workDir,
-    Image:   "",
+    Image:   atr.run.Image,
     CpuSets: []int{},
     Devices: []string{},
     Path:    "",
