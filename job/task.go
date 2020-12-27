@@ -166,6 +166,7 @@ func (atr *ActiveTaskRun) Start() (int, error) {
     CacheDir:      atr.Task.cacheDir,
     WorkDir:       workDir,
     AllowOverride: atr.Task.AllowOverride,
+    Name:          atr.run.Name,
     Image:         atr.run.Image,
     CpuSets:       []int{},
     Devices:       []string{},

@@ -48,6 +48,7 @@ type RunnerConfig struct {
   Log         *log.Logger
   WorkDir      string
   CacheDir     string
+  Name         string
   Image        string
   CpuSets     []int
   Devices     []string
