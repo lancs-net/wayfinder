@@ -208,6 +208,16 @@ func PrepareEnvironment(cpus []int, dryRun bool) error {
     return err
   }
 
+  /*
+   * Namespacing
+   */
+
+  // Allow rootless containers
+  err = setProcfsValue("/proc/sys/kernel/unprivileged_userns_clone", "1", dryRun)
+  if err != nil {
+    return err
+  }
+
   return nil
 }
 
