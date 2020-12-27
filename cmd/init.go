@@ -31,56 +31,31 @@ package cmd
 // POSSIBILITY OF SUCH DAMAGE.
 
 import (
-	"os"
-	"fmt"
-
-  "github.com/lancs-net/ukbench/log"
+  "runtime"
 
 	"github.com/spf13/cobra"
+  "github.com/opencontainers/runc/libcontainer"
+  _ "github.com/opencontainers/runc/libcontainer/nsenter"
+
+  "github.com/lancs-net/ukbench/log"
 )
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use: "ukbench",
-	Short: `ukbench is the Unified Unikernel Benchmarking Framework`,
-	PersistentPreRun: doRootCmd,
-	DisableFlagsInUseLine: true,
+var runcInitCmd = &cobra.Command{
+  Use: "runc-init",
+  Short: "This is the entrypoint for runc's libcontainer.  Do not call directly.",
+  Run: doRuncInitCmd,
+  Hidden: true,
 }
 
-// Execute adds all child commands to the root command and sets flags
-// appropriately.
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-}
+// doRuncInitCmd is the entrypoint for libcontainer
+func doRuncInitCmd(cmd *cobra.Command, args []string) {
+  runtime.GOMAXPROCS(1)
+  runtime.LockOSThread()
 
-// doRootCmd 
-func doRootCmd(cmd *cobra.Command, args []string) {
-	verbose, err := cmd.Flags().GetBool("verbose")
-	if err != nil {
-		fmt.Printf("%s\n", err)
-		os.Exit(0)
-	}
+  factory, _ := libcontainer.New("")
+  if err := factory.StartInitialization(); err != nil {
+    log.Fatal(err)
+  }
 
-	initLogging(verbose)
-}
-
-func init() {
-	// Persistent global flags
-	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Enable verbose logging")
-
-	// Subcommands
-	rootCmd.AddCommand(runCmd)
-	rootCmd.AddCommand(versionCmd)
-  rootCmd.AddCommand(runcInitCmd)
-}
-
-// initLogging prepares logrus with sensible defaults
-func initLogging(verbose bool) {
-  // Only log the warning severity or above.
-  if verbose {
-		log.SetLevel(log.DEBUG)
-	}
+  panic("Could not initialise pid 0 for container")
 }

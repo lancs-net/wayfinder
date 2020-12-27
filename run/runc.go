@@ -67,6 +67,17 @@ func (r RuncRunner) Init() error {
     return fmt.Errorf("Could not extract image: %s", err)
   }
 
+  r.log.Debug("Initializing runc container...")
+
+  _, err = libcontainer.New(
+    "/var/lib/container",
+    libcontainer.Cgroupfs,
+    libcontainer.InitArgs(os.Args[0], "runc-init"),
+  )
+  if err != nil {
+    return err
+  }
+
   return nil
 }
 
