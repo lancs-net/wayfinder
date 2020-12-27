@@ -50,7 +50,7 @@ type RunnerConfig struct {
   CacheDir      string
   Name          string
   Image         string
-  CpuSets     []int
+  CoreIds     []int
   Devices     []string
   Path          string
   Cmd           string
