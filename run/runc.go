@@ -45,8 +45,27 @@ type RuncRunner struct {
 func (r RuncRunner) Init() error {
   // Set the logger
   r.log = r.Config.Log
+  
+  // Download the image to the cache
+  r.log.Infof("Pulling image: %s...", r.Config.Image)
+  image, err := PullImage(r.Config.Image, r.Config.CacheDir)
+  if err != nil {
+    return fmt.Errorf("Could not download image: %s", err)
+  }
+  
+  digest, err := image.Digest()
+  if err != nil {
+    return fmt.Errorf("Could not process digest: %s", err)
+  }
+  
+  r.log.Debugf("Pulled: %s", digest)
 
-  r.log.Debug("Initializing runc...")
+  // Extract the image to the desired location
+  r.log.Infof("Extracting image to: %s", r.Config.WorkDir)
+  err = UnpackImage(image, r.Config.CacheDir, r.Config.WorkDir, r.Config.AllowOverride)
+  if err != nil {
+    return fmt.Errorf("Could not extract image: %s", err)
+  }
 
   return nil
 }
