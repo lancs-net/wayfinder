@@ -161,7 +161,7 @@ func (atr *ActiveTaskRun) Start() (int, error) {
     os.MkdirAll(workDir, os.ModePerm)
   }
 
-  _, err := run.NewRunner(&run.RunnerConfig{
+  runner, err := run.NewRunner(&run.RunnerConfig{
     Log:           atr.log,
     CacheDir:      atr.Task.cacheDir,
     WorkDir:       workDir,
@@ -179,6 +179,7 @@ func (atr *ActiveTaskRun) Start() (int, error) {
 
   exitCode, err := runner.Run()
   if err != nil {
+    runner.Destroy()
     return 1, fmt.Errorf("Could not start runner: %s", err)
   }
 
