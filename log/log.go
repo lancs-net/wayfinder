@@ -194,3 +194,9 @@ func (l *Logger) Fatal(messages ...interface{}) {
 func (l *Logger) Fatalf(format string, messages ...interface{}) {
   l.log(FATAL, format, messages...)
 }
+
+// Write implements io.Writer
+func (l *Logger) Write(b []byte) (n int, err error) {
+  l.log(INFO, "%s", string(b))
+  return len(b), nil
+}
