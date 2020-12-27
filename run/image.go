@@ -21,8 +21,15 @@ package run
 // NOTE: Parse will not handle short digests.
 
 import (
+  "os"
   "fmt"
   "errors"
+  "strings"
+  "runtime"
+
+  "github.com/tidwall/gjson"
+	"github.com/google/go-containerregistry/pkg/crane"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 )
 
 const (
@@ -99,4 +106,70 @@ func ParseImageName(s string) (*Image, error) {
   }
 
   return image, nil
+}
+
+// PullImage downloads an image
+func PullImage(image, cacheDir string) (v1.Image, error) {
+  var options []crane.Option
+
+  // options = append(options, crane.Insecure)
+
+  // Use current built OS and architecture
+  options = append(options, crane.WithPlatform(&v1.Platform{
+    OS: runtime.GOOS,
+    Architecture: runtime.GOARCH,
+  }))
+
+  // Grab the remote manifest
+  manifest, err := crane.Manifest(image, options...)
+  if err != nil {
+    return nil, fmt.Errorf("failed fetching manifest for %s: %v", image, err)
+  }
+
+  if !gjson.Valid(string(manifest)) {
+    return nil, fmt.Errorf("Cannot parse manifest: %s", string(manifest))
+  }
+
+  value := gjson.Get(string(manifest), "config.digest").Value().(string)
+  if value == "" {
+    return nil, fmt.Errorf("Malformed manifest: %s", string(manifest))
+  }
+  
+  digest := strings.Split(value, ":")[1]
+  tarball := fmt.Sprintf("%s/%s.tar.gz", cacheDir, digest)
+
+  // Download the tarball of the image if not available in the cache
+  if _, err := os.Stat(tarball); os.IsNotExist(err) {
+    // Create the cacheDir if it does not already exist
+    if cacheDir != "" {
+      if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
+        os.MkdirAll(cacheDir, os.ModePerm)
+      }
+    }
+    
+    // Pull the image
+    img, err := crane.Pull(image, options...)
+    if err != nil {
+      return nil, fmt.Errorf("Could not pull image: %s", err)
+    }
+    
+    f, err := os.Create(tarball)
+    if err != nil {
+      return nil, fmt.Errorf("Failed to open %s: %v", tarball, err)
+    }
+  
+    defer f.Close()
+  
+    err = crane.Save(img, image, tarball)
+    if err != nil {
+      return nil, fmt.Errorf("Could not save image: %s", err)
+    }
+  }
+
+  img, err := crane.Load(tarball)
+  if err != nil {
+    return nil, fmt.Errorf("Could not load image: %s", err)
+  }
+
+  return img, nil
 }
