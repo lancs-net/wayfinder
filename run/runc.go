@@ -306,10 +306,6 @@ func (r RuncRunner) Start() error {
   return nil
 }
 
-func (r RuncRunner) Wait() (int, error) {
-  return 0, nil
-}
-
 func (r RuncRunner) Destroy() error {
   return nil
 }
