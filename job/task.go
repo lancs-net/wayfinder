@@ -189,6 +189,8 @@ func (atr *ActiveTaskRun) Start() (int, error) {
     return 1, fmt.Errorf("Could not start runner: %s", err)
   }
 
+  runner.Destroy()
+
   return exitCode, nil
 }
 
