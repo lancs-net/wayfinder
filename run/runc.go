@@ -43,9 +43,9 @@ import (
 )
 
 type RuncRunner struct {
-  log    *log.Logger
-  Config *RunnerConfig
-  factory libcontainer.Factory
+  log      *log.Logger
+  Config   *RunnerConfig
+  container libcontainer.Container 
 }
 
 func (r RuncRunner) Init() error {
@@ -271,11 +271,16 @@ func (r RuncRunner) Init() error {
     },
   }
 
-  container, err := factory.Create(r.log.Prefix, config)
+  r.container, err = factory.Create(r.log.Prefix, config)
   if err != nil {
     return fmt.Errorf("Could not create container: %s", err)
   }
 
+  return nil
+}
+
+// Run the runc container
+func (r RuncRunner) Run() (int, error) {
   process := &libcontainer.Process{
     Args:   []string{"/bin/echo", "\"hello, world\""},
     Env:    []string{"PATH=/bin"},
@@ -284,28 +289,22 @@ func (r RuncRunner) Init() error {
     Stderr: r.log,
   }
 
-  err = container.Run(process)
+  err := r.container.Run(process)
   if err != nil {
-    container.Destroy()
-    return fmt.Errorf("Could not run container: %s", err)
+    return 1, fmt.Errorf("Could not run container: %s", err)
   }
 
   // Wait for the process to finish
-  _, err = process.Wait()
+  state, err := process.Wait()
   if err != nil {
-    return fmt.Errorf("Could not wait for container to finish: %s", err)
+    return 1, fmt.Errorf("Could not wait for container to finish: %s", err)
   }
 
-  // Destroy the container
-  container.Destroy()
-
-  return nil
+  return state.ExitCode(), nil
 }
 
-func (r RuncRunner) Run() (int, error) {
-  return 0, nil
-}
-
+// Destroy the runc container
 func (r RuncRunner) Destroy() error {
+  r.container.Destroy()
   return nil
 }
