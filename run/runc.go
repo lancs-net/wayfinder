@@ -302,8 +302,8 @@ func (r RuncRunner) Init() error {
   return nil
 }
 
-func (r RuncRunner) Start() error {
-  return nil
+func (r RuncRunner) Run() (int, error) {
+  return 0, nil
 }
 
 func (r RuncRunner) Destroy() error {

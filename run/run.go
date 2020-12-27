@@ -59,7 +59,7 @@ type RunnerConfig struct {
 
 type Runner interface {
   Init()     error
-  Start()    error
+  Run()    (int, error)
   Destroy()  error
 }
 

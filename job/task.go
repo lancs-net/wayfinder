@@ -177,7 +177,12 @@ func (atr *ActiveTaskRun) Start() (int, error) {
     return 1, err
   }
 
-  return 0, nil
+  exitCode, err := runner.Run()
+  if err != nil {
+    return 1, fmt.Errorf("Could not start runner: %s", err)
+  }
+
+  return exitCode, nil
 }
 
 // IsDirEmpty is a method used to determine whether a directory is empty
