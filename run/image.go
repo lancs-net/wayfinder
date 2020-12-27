@@ -28,6 +28,7 @@ import (
   "runtime"
 
   "github.com/tidwall/gjson"
+  "github.com/moby/moby/pkg/archive"
 	"github.com/google/go-containerregistry/pkg/crane"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 )
@@ -172,4 +173,46 @@ func PullImage(image, cacheDir string) (v1.Image, error) {
   }
 
   return img, nil
+}
+
+// UnpackImage takes a container image and writes its filesystem to outDir
+func UnpackImage(image v1.Image, cacheDir, outDir string, allowOverride bool) error {
+  if image == nil {
+    return fmt.Errorf("Invalid image")
+  }
+
+  // Retrieve the manifest, checking if it's a valid `image` variable
+  manifest, err := image.Manifest()
+  if err != nil {
+    return fmt.Errorf("Cannot read manifest: %s", err)
+  }
+
+  // Check if the tarball exists in the cache
+  tarball := fmt.Sprintf("%s/%s.tar.gz", cacheDir, manifest.Config.Digest.Hex)
+  if _, err := os.Stat(tarball); os.IsNotExist(err) {
+    return fmt.Errorf("Image does not exist: %s", tarball)
+  }
+  
+  // Get the layers of this image
+  layers, err := image.Layers()
+  if err != nil {
+    return fmt.Errorf("Could not read layers: %s", err)
+  }
+
+  for _, layer := range layers {
+    uncompressed, err := layer.Uncompressed()
+    if err != nil {
+      return fmt.Errorf("Could not read layer: %s", err)
+    }
+    
+    // Untar cached tarball
+    err = archive.Untar(uncompressed, outDir, &archive.TarOptions{
+      NoLchown: true,
+    })
+    if err != nil {
+      return fmt.Errorf("Extracting tar from %s failed: %s", tarball, err)
+    }
+	}
+
+  return nil
 }
