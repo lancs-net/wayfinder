@@ -49,12 +49,14 @@ type TaskParam struct {
 
 // Task is the specific iterated configuration
 type Task struct {
-  Params   []TaskParam
-  Inputs  *[]Input
-  Outputs *[]Output
-  runs      *Queue
-  uuid       string
-  workDir    string
+  Params      []TaskParam
+  Inputs     *[]Input
+  Outputs    *[]Output
+  runs         *Queue
+  uuid          string
+  workDir       string
+  cacheDir      string
+  AllowOverride bool
 }
 
 // Init prepare the task 
@@ -159,13 +161,14 @@ func (atr *ActiveTaskRun) Start() (int, error) {
   }
 
   _, err := run.NewRunner(&run.RunnerConfig{
-    Log:     atr.log,
-    WorkDir: workDir,
-    Image:   atr.run.Image,
-    CpuSets: []int{},
-    Devices: []string{},
-    Path:    "",
-    Cmd:     "",
+    Log:           atr.log,
+    WorkDir:       workDir,
+    AllowOverride: atr.Task.AllowOverride,
+    Image:         atr.run.Image,
+    CpuSets:       []int{},
+    Devices:       []string{},
+    Path:          "",
+    Cmd:           "",
   })
   if err != nil {
     return 1, err

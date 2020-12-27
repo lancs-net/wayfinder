@@ -45,13 +45,15 @@ const (
 )
 
 type RunnerConfig struct {
-  Log      *log.Logger
-  WorkDir   string
-  Image     string
-  CpuSets []int
-  Devices []string
-  Path      string
-  Cmd       string
+  Log         *log.Logger
+  WorkDir      string
+  CacheDir     string
+  Image        string
+  CpuSets     []int
+  Devices     []string
+  Path          string
+  Cmd           string
+  AllowOverride bool
 }
 
 type Runner interface {
