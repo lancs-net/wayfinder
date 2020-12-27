@@ -281,6 +281,10 @@ func (r *RuncRunner) Init() error {
 
 // Run the runc container
 func (r *RuncRunner) Run() (int, error) {
+  if r.container == nil {
+    return 1, fmt.Errorf("Cannot run container, missing initialization")
+  }
+
   process := &libcontainer.Process{
     Args:   []string{"/bin/echo", "\"hello, world\""},
     Env:    []string{"PATH=/bin"},
@@ -305,6 +309,9 @@ func (r *RuncRunner) Run() (int, error) {
 
 // Destroy the runc container
 func (r *RuncRunner) Destroy() error {
-  r.container.Destroy()
+  if r.container != nil {
+    r.container.Destroy()
+    r.container = nil
+  }
   return nil
 }
