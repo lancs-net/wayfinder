@@ -86,7 +86,7 @@ func NewRunner(cfg *RunnerConfig) (Runner, error) {
 
   err = runner.Init()
   if err != nil {
-    return nil, err
+    return nil, fmt.Errorf("Could not initialize runner: %s", err)
   }
 
   return runner, nil
