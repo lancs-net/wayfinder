@@ -66,6 +66,7 @@ func (t *Task) Init(workDir string, allowOverride bool, runs *[]Run) error {
 
   // Set the working directory
   t.workDir = path.Join(workDir, "results", t.UUID())
+  t.cacheDir = path.Join(workDir, ".cache")
 
   // Set additional task configuration
   t.AllowOverride = allowOverride
@@ -162,6 +163,7 @@ func (atr *ActiveTaskRun) Start() (int, error) {
 
   _, err := run.NewRunner(&run.RunnerConfig{
     Log:           atr.log,
+    CacheDir:      atr.Task.cacheDir,
     WorkDir:       workDir,
     AllowOverride: atr.Task.AllowOverride,
     Image:         atr.run.Image,
