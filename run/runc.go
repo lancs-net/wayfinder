@@ -48,7 +48,7 @@ type RuncRunner struct {
   container libcontainer.Container 
 }
 
-func (r RuncRunner) Init() error {
+func (r *RuncRunner) Init() error {
   // Set the logger
   r.log = r.Config.Log
   
@@ -280,7 +280,7 @@ func (r RuncRunner) Init() error {
 }
 
 // Run the runc container
-func (r RuncRunner) Run() (int, error) {
+func (r *RuncRunner) Run() (int, error) {
   process := &libcontainer.Process{
     Args:   []string{"/bin/echo", "\"hello, world\""},
     Env:    []string{"PATH=/bin"},
@@ -304,7 +304,7 @@ func (r RuncRunner) Run() (int, error) {
 }
 
 // Destroy the runc container
-func (r RuncRunner) Destroy() error {
+func (r *RuncRunner) Destroy() error {
   r.container.Destroy()
   return nil
 }

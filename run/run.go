@@ -77,7 +77,7 @@ func NewRunner(cfg *RunnerConfig) (Runner, error) {
   var runner Runner
   switch runtime := ref.Runtime; runtime {
 	case "runc":
-    runner = RuncRunner{
+    runner = &RuncRunner{
       Config: cfg,
     }
 	default:
