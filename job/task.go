@@ -168,7 +168,7 @@ func (atr *ActiveTaskRun) Start() (int, error) {
     AllowOverride: atr.Task.AllowOverride,
     Name:          atr.run.Name,
     Image:         atr.run.Image,
-    CpuSets:       []int{},
+    CoreIds:       atr.CoreIds,
     Devices:       atr.run.Devices,
   }
   if atr.run.Path != "" {
