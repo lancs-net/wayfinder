@@ -161,7 +161,7 @@ func (atr *ActiveTaskRun) Start() (int, error) {
     os.MkdirAll(workDir, os.ModePerm)
   }
 
-  runner, err := run.NewRunner(&run.RunnerConfig{
+  config := &run.RunnerConfig{
     Log:           atr.log,
     CacheDir:      atr.Task.cacheDir,
     WorkDir:       workDir,
@@ -170,9 +170,15 @@ func (atr *ActiveTaskRun) Start() (int, error) {
     Image:         atr.run.Image,
     CpuSets:       []int{},
     Devices:       []string{},
-    Path:          "",
-    Cmd:           "",
-  })
+  }
+  if atr.run.Path != "" {
+    config.Path = atr.run.Path
+  } else if atr.run.Cmd != "" {
+    config.Cmd = atr.run.Cmd
+  } else {
+    return 1, fmt.Errorf("Run did not specify path or cmd: %s", atr.run.Name)
+  }
+  runner, err := run.NewRunner(config)
   if err != nil {
     return 1, err
   }
