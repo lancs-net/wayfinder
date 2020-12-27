@@ -31,7 +31,13 @@ package run
 // POSSIBILITY OF SUCH DAMAGE.
 
 import (
+  "os"
+  "fmt"
+
+  "golang.org/x/sys/unix"
   "github.com/opencontainers/runc/libcontainer"
+  "github.com/opencontainers/runc/libcontainer/specconv"
+  "github.com/opencontainers/runc/libcontainer/configs"
 
   "github.com/lancs-net/ukbench/log"
 )
@@ -69,7 +75,7 @@ func (r RuncRunner) Init() error {
 
   r.log.Debug("Initializing runc container...")
 
-  _, err = libcontainer.New(
+  factory, err := libcontainer.New(
     "/var/lib/container",
     libcontainer.Cgroupfs,
     libcontainer.InitArgs(os.Args[0], "runc-init"),
@@ -77,6 +83,221 @@ func (r RuncRunner) Init() error {
   if err != nil {
     return err
   }
+
+  var allowedDevices []*configs.DeviceRule
+  for _, device := range specconv.AllowedDevices {
+    allowedDevices = append(allowedDevices, &device.DeviceRule)
+  }
+
+  defaultMountFlags := unix.MS_NOEXEC | unix.MS_NOSUID | unix.MS_NODEV
+  config := &configs.Config{
+    Rootfs: r.Config.WorkDir,
+    Capabilities: &configs.Capabilities{
+      Bounding: []string{
+        "CAP_CHOWN",
+        "CAP_DAC_OVERRIDE",
+        "CAP_FSETID",
+        "CAP_FOWNER",
+        "CAP_MKNOD",
+        "CAP_NET_RAW",
+        "CAP_SETGID",
+        "CAP_SETUID",
+        "CAP_SETFCAP",
+        "CAP_SETPCAP",
+        "CAP_NET_BIND_SERVICE",
+        "CAP_SYS_CHROOT",
+        "CAP_KILL",
+        "CAP_AUDIT_WRITE",
+      },
+      Effective: []string{
+        "CAP_CHOWN",
+        "CAP_DAC_OVERRIDE",
+        "CAP_FSETID",
+        "CAP_FOWNER",
+        "CAP_MKNOD",
+        "CAP_NET_RAW",
+        "CAP_SETGID",
+        "CAP_SETUID",
+        "CAP_SETFCAP",
+        "CAP_SETPCAP",
+        "CAP_NET_BIND_SERVICE",
+        "CAP_SYS_CHROOT",
+        "CAP_KILL",
+        "CAP_AUDIT_WRITE",
+      },
+      Inheritable: []string{
+        "CAP_CHOWN",
+        "CAP_DAC_OVERRIDE",
+        "CAP_FSETID",
+        "CAP_FOWNER",
+        "CAP_MKNOD",
+        "CAP_NET_RAW",
+        "CAP_SETGID",
+        "CAP_SETUID",
+        "CAP_SETFCAP",
+        "CAP_SETPCAP",
+        "CAP_NET_BIND_SERVICE",
+        "CAP_SYS_CHROOT",
+        "CAP_KILL",
+        "CAP_AUDIT_WRITE",
+      },
+      Permitted: []string{
+        "CAP_CHOWN",
+        "CAP_DAC_OVERRIDE",
+        "CAP_FSETID",
+        "CAP_FOWNER",
+        "CAP_MKNOD",
+        "CAP_NET_RAW",
+        "CAP_SETGID",
+        "CAP_SETUID",
+        "CAP_SETFCAP",
+        "CAP_SETPCAP",
+        "CAP_NET_BIND_SERVICE",
+        "CAP_SYS_CHROOT",
+        "CAP_KILL",
+        "CAP_AUDIT_WRITE",
+      },
+      Ambient: []string{
+        "CAP_CHOWN",
+        "CAP_DAC_OVERRIDE",
+        "CAP_FSETID",
+        "CAP_FOWNER",
+        "CAP_MKNOD",
+        "CAP_NET_RAW",
+        "CAP_SETGID",
+        "CAP_SETUID",
+        "CAP_SETFCAP",
+        "CAP_SETPCAP",
+        "CAP_NET_BIND_SERVICE",
+        "CAP_SYS_CHROOT",
+        "CAP_KILL",
+        "CAP_AUDIT_WRITE",
+      },
+    },
+    Namespaces: configs.Namespaces([]configs.Namespace{
+      {Type: configs.NEWNS},
+      {Type: configs.NEWUTS},
+      {Type: configs.NEWIPC},
+      {Type: configs.NEWPID},
+      {Type: configs.NEWUSER},
+      {Type: configs.NEWNET},
+      {Type: configs.NEWCGROUP},
+    }),
+    Cgroups: &configs.Cgroup{
+      Name:   "ukbench",
+      Parent: "system",
+      Resources: &configs.Resources{
+        MemorySwappiness: nil,
+        Devices:          allowedDevices,
+      },
+    },
+    MaskPaths: []string{
+      "/proc/kcore",
+      "/sys/firmware",
+    },
+    ReadonlyPaths: []string{
+      "/proc/sys", "/proc/sysrq-trigger", "/proc/irq", "/proc/bus",
+    },
+    Devices:  specconv.AllowedDevices,
+    Hostname: r.log.Prefix,
+    Mounts: []*configs.Mount{
+      {
+        Source:      "proc",
+        Destination: "/proc",
+        Device:      "proc",
+        Flags:       defaultMountFlags,
+      },
+      {
+        Source:      "tmpfs",
+        Destination: "/dev",
+        Device:      "tmpfs",
+        Flags:       unix.MS_NOSUID | unix.MS_STRICTATIME,
+        Data:        "mode=755",
+      },
+      {
+        Source:      "devpts",
+        Destination: "/dev/pts",
+        Device:      "devpts",
+        Flags:       unix.MS_NOSUID | unix.MS_NOEXEC,
+        Data:        "newinstance,ptmxmode=0666,mode=0620,gid=5",
+      },
+      {
+        Device:      "tmpfs",
+        Source:      "shm",
+        Destination: "/dev/shm",
+        Data:        "mode=1777,size=65536k",
+        Flags:       defaultMountFlags,
+      },
+      {
+        Source:      "mqueue",
+        Destination: "/dev/mqueue",
+        Device:      "mqueue",
+        Flags:       defaultMountFlags,
+      },
+      {
+        Source:      "sysfs",
+        Destination: "/sys",
+        Device:      "sysfs",
+        Flags:       defaultMountFlags | unix.MS_RDONLY,
+      },
+    },
+    UidMappings: []configs.IDMap{
+      {
+        ContainerID: 0,
+        HostID: 1000,
+        Size: 65536,
+      },
+    },
+    GidMappings: []configs.IDMap{
+      {
+        ContainerID: 0,
+        HostID: 1000,
+        Size: 65536,
+      },
+    },
+    Networks: []*configs.Network{
+      {
+        Type:    "loopback",
+        Address: "127.0.0.1/0",
+        Gateway: "localhost",
+      },
+    },
+    Rlimits: []configs.Rlimit{
+      {
+        Type: unix.RLIMIT_NOFILE,
+        Hard: uint64(1025),
+        Soft: uint64(1025),
+      },
+    },
+  }
+
+  container, err := factory.Create(r.log.Prefix, config)
+  if err != nil {
+    return fmt.Errorf("Could not create container: %s", err)
+  }
+
+  process := &libcontainer.Process{
+    Args:   []string{"/bin/echo", "\"hello, world\""},
+    Env:    []string{"PATH=/bin"},
+    User:   "root",
+    Stdout: r.log,
+    Stderr: r.log,
+  }
+
+  err = container.Run(process)
+  if err != nil {
+    container.Destroy()
+    return fmt.Errorf("Could not run container: %s", err)
+  }
+
+  // Wait for the process to finish
+  _, err = process.Wait()
+  if err != nil {
+    return fmt.Errorf("Could not wait for container to finish: %s", err)
+  }
+
+  // Destroy the container
+  container.Destroy()
 
   return nil
 }
