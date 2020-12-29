@@ -158,10 +158,10 @@ func PrepareEnvironment(cpus []int, dryRun bool) error {
   }
 
   // Drop fs cache
-  err = setProcfsValue("/proc/sys/vm/drop_caches", "3", dryRun)
-  if err != nil {
-    return err
-  }
+  // err = setProcfsValue("/proc/sys/vm/drop_caches", "3", dryRun)
+  // if err != nil {
+  //   return err
+  // }
 
   /*
    * Networking preparation
