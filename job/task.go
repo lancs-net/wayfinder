@@ -60,7 +60,7 @@ type Task struct {
 }
 
 // Init prepare the task 
-func (t *Task) Init(workDir string, allowOverride bool, runs *[]Run) error {
+func (t *Task) Init(workDir string, allowOverride bool, runs *[]Run, dryRun bool) error {
   // Create a queue of runs for this particular task
   t.runs = NewQueue(len(*runs))
 
@@ -73,7 +73,9 @@ func (t *Task) Init(workDir string, allowOverride bool, runs *[]Run) error {
 
   // Create a working directory for this task
   if _, err := os.Stat(t.workDir); os.IsNotExist(err) {
-    os.MkdirAll(workDir, os.ModePerm)
+    if !dryRun {
+      os.MkdirAll(workDir, os.ModePerm)
+    }
 
   // Check if we're allowed to override a non-empty directory
   } else {
@@ -85,7 +87,9 @@ func (t *Task) Init(workDir string, allowOverride bool, runs *[]Run) error {
       return fmt.Errorf("Task directory not empty: %s", t.workDir)
     }
 
-    os.MkdirAll(workDir, os.ModePerm)
+    if !dryRun {
+      os.MkdirAll(workDir, os.ModePerm)
+    }
   }
 
   // Add the runs in-order
@@ -126,11 +130,12 @@ type ActiveTaskRun struct {
   CoreIds []int // the exact core numbers this task is using
   log      *log.Logger
   workDir   string
+  dryRun    bool
 }
 
 // NewActiveTaskRun initializes the current task and the run step for the
 // the specified cores.
-func NewActiveTaskRun(task *Task, run Run, coreIds []int) (*ActiveTaskRun, error) {
+func NewActiveTaskRun(task *Task, run Run, coreIds []int, dryRun bool) (*ActiveTaskRun, error) {
   atr := &ActiveTaskRun{
     Task:    task,
     run:    &run,
@@ -156,7 +161,7 @@ func (atr *ActiveTaskRun) Start() (int, error) {
 
   // Create the run's working directory
   workDir := path.Join(atr.Task.workDir, atr.run.Name)
-  if _, err := os.Stat(workDir); os.IsNotExist(err) {
+  if _, err := os.Stat(workDir); os.IsNotExist(err) && !atr.dryRun {
     atr.log.Debugf("Creating directory: %s", workDir)
     os.MkdirAll(workDir, os.ModePerm)
   }
@@ -178,7 +183,8 @@ func (atr *ActiveTaskRun) Start() (int, error) {
   } else {
     return 1, fmt.Errorf("Run did not specify path or cmd: %s", atr.run.Name)
   }
-  runner, err := run.NewRunner(config)
+
+  runner, err := run.NewRunner(config, atr.dryRun)
   if err != nil {
     return 1, err
   }

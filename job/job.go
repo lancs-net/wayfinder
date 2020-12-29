@@ -72,6 +72,7 @@ type Job struct {
   Runs          []Run        `yaml:"runs"`
   waitList     *List
   scheduleGrace int
+  dryRun        bool
 }
 
 // RuntimeConfig contains details about the runtime of ukbench
@@ -83,7 +84,6 @@ type RuntimeConfig struct {
   ScheduleGrace   int
   WorkDir         string
   AllowOverride   bool
-  DryRun          bool
 }
 
 // tasksInFlight represents the maximum tasks which are actively running
@@ -92,7 +92,7 @@ type RuntimeConfig struct {
 var tasksInFlight *CoreMap
 
 // NewJob prepares a job yaml file
-func NewJob(filePath string, cfg *RuntimeConfig) (*Job, error) {
+func NewJob(filePath string, cfg *RuntimeConfig, dryRun bool) (*Job, error) {
   // Check if the path is set
   if len(filePath) == 0 {
     return nil, fmt.Errorf("File path cannot be empty")
@@ -137,6 +137,8 @@ func NewJob(filePath string, cfg *RuntimeConfig) (*Job, error) {
   // Set the schedule grace time
   job.scheduleGrace = cfg.ScheduleGrace
 
+  job.dryRun = dryRun
+
   // Iterate over all the tasks, check if the run is stasifyable, initialize the
   // task and add it to the waiting list.
   for _, task := range tasks {
@@ -156,7 +158,7 @@ func NewJob(filePath string, cfg *RuntimeConfig) (*Job, error) {
       }
     }
 
-    err := task.Init(cfg.WorkDir, cfg.AllowOverride, &job.Runs)
+    err := task.Init(cfg.WorkDir, cfg.AllowOverride, &job.Runs, dryRun)
     if err != nil {
       log.Errorf("Could not initialize task: %s", err)
     } else {
@@ -405,7 +407,7 @@ func (j *Job) Start() error {
       }
 
       // Initialize the task run
-      activeTaskRun, err := NewActiveTaskRun(task.(*Task), nextRun.(Run), cores)
+      activeTaskRun, err := NewActiveTaskRun(task.(*Task), nextRun.(Run), cores, j.dryRun)
       if err != nil {
         log.Errorf("Could not initialize run for this task: %s", err)
 

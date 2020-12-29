@@ -94,7 +94,7 @@ func NewRunner(cfg *RunnerConfig) (Runner, error) {
     return nil, fmt.Errorf("Unsupported container runtime: %s", runtime)
 	}
 
-  err = runner.Init()
+  err = runner.Init(cfg.Inputs, cfg.Outputs, dryRun)
   if err != nil {
     return nil, fmt.Errorf("Could not initialize runner: %s", err)
   }
