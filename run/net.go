@@ -31,76 +31,47 @@ package run
 // POSSIBILITY OF SUCH DAMAGE.
 
 import (
-  "fmt"
+	"net"
+
+	"github.com/genuinetools/netns/bridge"
+	"github.com/genuinetools/netns/network"
+	"github.com/opencontainers/runtime-spec/specs-go"
 
   "github.com/lancs-net/ukbench/log"
 )
 
-type RunnerType int
-
-const (
-  UNKNOWN RunnerType = iota
-  EMPTY
-  RUNC
-)
-
-type Input struct {
-  Name string `yaml:"name"`
-  Path string `yaml:"path"`
+type Bridge struct {
+  Name       string
+  Interface  string
+  Subnet     string
+  CacheDir   string
+	netOpt     network.Opt
+	brOpt      bridge.Opt
+	client    *network.Client
 }
 
-type Output struct {
-  Name string `yaml:"name"`
-  Path string `yaml:"path"`
-}
+// Init prepares netns
+func (b *Bridge) Init(dryRun bool) error {
+  // Create the bridge using netns
+  b.netOpt.ContainerInterface = b.Interface
+  b.netOpt.BridgeName = b.Name
+  b.brOpt.Name = b.Name
+  b.brOpt.IPAddr = b.Subnet
+  b.netOpt.StateDir = b.CacheDir
 
-type RunnerConfig struct {
-  Log             *log.Logger
-  WorkDir          string
-  CacheDir         string
-  Name             string
-  Image            string
-  CoreIds        []int
-  Devices        []string
-  Path             string
-  Cmd              string
-  AllowOverride    bool
-  Inputs        *[]Input
-  Outputs       *[]Output
-}
-
-type Runner interface {
-  Init(*[]Input, *[]Output, bool)  error
-  Run()                           (int, error)
-  Destroy()                        error
-}
-
-// NewRunner returns the name of the 
-func NewRunner(cfg *RunnerConfig, bridge *Bridge, dryRun bool) (Runner, error) {
-  ref, err := ParseImageName(cfg.Image)
-  if err != nil {
-    return nil, err
-  }
-
-  if len(ref.Runtime) == 0 {
-    ref.Runtime = DefaultRuntime
-  }
-
-  var runner Runner
-  switch runtime := ref.Runtime; runtime {
-	case "runc":
-    runner = &RuncRunner{
-      Config: cfg,
-      Bridge: bridge,
+  log.Debugf("Creating bridge %s...", b.Name)
+  if !dryRun {
+    var err error
+    b.client, err = network.New(b.netOpt)
+    if err != nil {
+      return err
     }
-	default:
-    return nil, fmt.Errorf("Unsupported container runtime: %s", runtime)
-	}
-
-  err = runner.Init(cfg.Inputs, cfg.Outputs, dryRun)
-  if err != nil {
-    return nil, fmt.Errorf("Could not initialize runner: %s", err)
   }
 
-  return runner, nil
+  return nil
+}
+
+// Create a veth pair with the bridge for the container
+func (b *Bridge) Create(s *specs.State) (net.IP, error) {
+  return b.client.Create(s, b.brOpt, "")
 }

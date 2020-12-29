@@ -45,6 +45,7 @@ import (
 type RuncRunner struct {
   log      *log.Logger
   Config   *RunnerConfig
+  Bridge   *Bridge
   container libcontainer.Container 
 }
 

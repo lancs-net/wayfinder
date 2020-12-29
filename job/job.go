@@ -36,6 +36,7 @@ import (
   "math"
   "time"
   "sync"
+  "path"
   "strconv"
   "io/ioutil"
 
@@ -73,6 +74,7 @@ type Job struct {
   waitList     *List
   scheduleGrace int
   dryRun        bool
+  bridge       *run.Bridge
 }
 
 // RuntimeConfig contains details about the runtime of ukbench
@@ -170,6 +172,18 @@ func NewJob(filePath string, cfg *RuntimeConfig, dryRun bool) (*Job, error) {
 
   // Prepare a map of cores to hold onto a particular task's run
   tasksInFlight = NewCoreMap(cfg.Cpus)
+
+  // Set up the bridge
+  job.bridge = &run.Bridge{
+    Name:      cfg.BridgeName,
+    Interface: cfg.BridgeIface,
+    Subnet:    cfg.BridgeSubnet,
+    CacheDir:  path.Join(cfg.WorkDir, ".cache"),
+  }
+  err = job.bridge.Init(dryRun)
+  if err != nil {
+    return nil, fmt.Errorf("Could not create bridge: %s", err)
+  }
 
   return &job, nil
 }
@@ -407,7 +421,13 @@ func (j *Job) Start() error {
       }
 
       // Initialize the task run
-      activeTaskRun, err := NewActiveTaskRun(task.(*Task), nextRun.(Run), cores, j.dryRun)
+      activeTaskRun, err := NewActiveTaskRun(
+        task.(*Task),
+        nextRun.(Run),
+        cores,
+        j.bridge,
+        j.dryRun,
+      )
       if err != nil {
         log.Errorf("Could not initialize run for this task: %s", err)
 

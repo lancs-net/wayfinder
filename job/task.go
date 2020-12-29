@@ -131,11 +131,12 @@ type ActiveTaskRun struct {
   log      *log.Logger
   workDir   string
   dryRun    bool
+  bridge   *run.Bridge
 }
 
 // NewActiveTaskRun initializes the current task and the run step for the
 // the specified cores.
-func NewActiveTaskRun(task *Task, run Run, coreIds []int, dryRun bool) (*ActiveTaskRun, error) {
+func NewActiveTaskRun(task *Task, run Run, coreIds []int, bridge *run.Bridge, dryRun bool) (*ActiveTaskRun, error) {
   atr := &ActiveTaskRun{
     Task:    task,
     run:    &run,
@@ -146,6 +147,8 @@ func NewActiveTaskRun(task *Task, run Run, coreIds []int, dryRun bool) (*ActiveT
     LogLevel: log.GetLevel(),
     Prefix:   atr.UUID(),
   }
+
+  atr.bridge = bridge
 
   return atr, nil
 }
@@ -186,7 +189,7 @@ func (atr *ActiveTaskRun) Start() (int, error) {
     return 1, fmt.Errorf("Run did not specify path or cmd: %s", atr.run.Name)
   }
 
-  runner, err := run.NewRunner(config, atr.dryRun)
+  runner, err := run.NewRunner(config, atr.bridge, atr.dryRun)
   if err != nil {
     return 1, err
   }
