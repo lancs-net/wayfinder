@@ -32,6 +32,7 @@ package log
 
 import (
   "fmt"
+  "strings"
 
   "github.com/muesli/termenv"
 )
@@ -197,6 +198,13 @@ func (l *Logger) Fatalf(format string, messages ...interface{}) {
 
 // Write implements io.Writer
 func (l *Logger) Write(b []byte) (n int, err error) {
-  l.log(INFO, "%s", string(b))
+  if len(string(b)) > 0 {
+    messages := strings.Split(string(b), "\n")
+    for _, message := range messages {
+      if len(message) > 0 {
+        l.log(INFO, "%s", message)
+      }
+    }
+  }
   return len(b), nil
 }
