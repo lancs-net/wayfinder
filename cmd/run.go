@@ -146,6 +146,12 @@ func doRunCmd(cmd *cobra.Command, args []string) {
     os.MkdirAll(runConfig.WorkDir, os.ModePerm)
   }
 
+  // Create the caching dir
+  cacheDir := path.Join(runConfig.WorkDir, ".cache")
+  if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
+    os.MkdirAll(cacheDir, os.ModePerm)
+  }
+
 	j, err := job.NewJob(args[0], &job.RuntimeConfig{
     Cpus:          cpus,
     ScheduleGrace: runConfig.ScheduleGrace,
