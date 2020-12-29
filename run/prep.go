@@ -144,6 +144,10 @@ func setProcfsValue(path string, value string, dryRun bool) error {
 }
 
 func PrepareEnvironment(cpus []int, dryRun bool) error {
+  if _, err := os.Stat("/proc/self/ns/user"); os.IsNotExist(err) {
+		return fmt.Errorf("userns is unsupported")
+	}
+
   /*
    * Filesystem preparation
    */
