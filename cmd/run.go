@@ -157,6 +157,7 @@ func doRunCmd(cmd *cobra.Command, args []string) {
     ScheduleGrace: runConfig.ScheduleGrace,
     AllowOverride: runConfig.AllowOverride,
     WorkDir:       runConfig.WorkDir,
+    DryRun:        runConfig.DryRun,
   })
 	if err != nil {
 		log.Fatalf("Could not read configuration: %s", err)

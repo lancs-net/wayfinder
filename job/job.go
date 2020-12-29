@@ -80,6 +80,7 @@ type RuntimeConfig struct {
   ScheduleGrace   int
   WorkDir         string
   AllowOverride   bool
+  DryRun          bool
 }
 
 // tasksInFlight represents the maximum tasks which are actively running
