@@ -137,7 +137,7 @@ func doRunCmd(cmd *cobra.Command, args []string) {
   setupInterruptHandler()
 
   // Prepare environment
-  err = run.PrepareEnvironment(cpus, runConfig.DryRun)
+  err = job.PrepareEnvironment(cpus, runConfig.DryRun)
   if err != nil {
     log.Errorf("Could not prepare environment: %s", err)
     cleanup()
@@ -209,5 +209,5 @@ func setupInterruptHandler() {
 // Preserve the host environment
 func cleanup() {
   log.Info("Running clean up...")
-  run.RevertEnvironment(runConfig.DryRun)
+  job.RevertEnvironment(runConfig.DryRun)
 }
