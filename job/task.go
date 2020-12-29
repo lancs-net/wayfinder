@@ -175,6 +175,8 @@ func (atr *ActiveTaskRun) Start() (int, error) {
     Image:         atr.run.Image,
     CoreIds:       atr.CoreIds,
     Devices:       atr.run.Devices,
+    Inputs:        atr.Task.Inputs,
+    Outputs:       atr.Task.Outputs,
   }
   if atr.run.Path != "" {
     config.Path = atr.run.Path

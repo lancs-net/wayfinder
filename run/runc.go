@@ -48,7 +48,7 @@ type RuncRunner struct {
   container libcontainer.Container 
 }
 
-func (r *RuncRunner) Init(dryRun bool) error {
+func (r *RuncRunner) Init(in *[]Input, out *[]Output, dryRun bool) error {
   // Set the logger
   r.log = r.Config.Log
   

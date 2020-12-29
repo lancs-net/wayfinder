@@ -55,22 +55,24 @@ type Output struct {
 }
 
 type RunnerConfig struct {
-  Log          *log.Logger
-  WorkDir       string
-  CacheDir      string
-  Name          string
-  Image         string
-  CoreIds     []int
-  Devices     []string
-  Path          string
-  Cmd           string
-  AllowOverride bool
+  Log             *log.Logger
+  WorkDir          string
+  CacheDir         string
+  Name             string
+  Image            string
+  CoreIds        []int
+  Devices        []string
+  Path             string
+  Cmd              string
+  AllowOverride    bool
+  Inputs        *[]Input
+  Outputs       *[]Output
 }
 
 type Runner interface {
-  Init()     error
-  Run()    (int, error)
-  Destroy()  error
+  Init(*[]Input, *[]Output, bool)  error
+  Run()                           (int, error)
+  Destroy()                        error
 }
 
 // NewRunner returns the name of the 
