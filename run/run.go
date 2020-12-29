@@ -76,7 +76,7 @@ type Runner interface {
 }
 
 // NewRunner returns the name of the 
-func NewRunner(cfg *RunnerConfig) (Runner, error) {
+func NewRunner(cfg *RunnerConfig, dryRun bool) (Runner, error) {
   ref, err := ParseImageName(cfg.Image)
   if err != nil {
     return nil, err
