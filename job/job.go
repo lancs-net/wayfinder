@@ -41,6 +41,7 @@ import (
 
   "gopkg.in/yaml.v2"
   "github.com/lancs-net/ukbench/log"
+  "github.com/lancs-net/ukbench/run"
 )
 
 type JobParam struct {
@@ -54,16 +55,6 @@ type JobParam struct {
   StepMode  string `yaml:"step_mode"`
 }
 
-type Input struct {
-  Name string `yaml:"name"`
-  Path string `yaml:"path"`
-}
-
-type Output struct {
-  Name string `yaml:"name"`
-  Path string `yaml:"path"`
-}
-
 type Run struct {
   Name      string `yaml:"name"`
   Image     string `yaml:"image"`
@@ -75,10 +66,10 @@ type Run struct {
 }
 
 type Job struct {
-  Params        []JobParam `yaml:"params"`
-  Inputs        []Input    `yaml:"inputs"`
-  Outputs       []Output   `yaml:"outputs"`
-  Runs          []Run      `yaml:"runs"`
+  Params        []JobParam   `yaml:"params"`
+  Inputs        []run.Input  `yaml:"inputs"`
+  Outputs       []run.Output `yaml:"outputs"`
+  Runs          []Run        `yaml:"runs"`
   waitList     *List
   scheduleGrace int
 }

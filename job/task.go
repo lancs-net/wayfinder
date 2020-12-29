@@ -50,8 +50,8 @@ type TaskParam struct {
 // Task is the specific iterated configuration
 type Task struct {
   Params      []TaskParam
-  Inputs     *[]Input
-  Outputs    *[]Output
+  Inputs     *[]run.Input
+  Outputs    *[]run.Output
   runs         *Queue
   uuid          string
   workDir       string

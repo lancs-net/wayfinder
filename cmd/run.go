@@ -39,10 +39,9 @@ import (
   "os/signal"
 
 	"github.com/spf13/cobra"
-	"github.com/lancs-net/ukbench/log"
 
+	"github.com/lancs-net/ukbench/log"
 	"github.com/lancs-net/ukbench/job"
-	"github.com/lancs-net/ukbench/run"
 )
 
 type RunConfig struct {

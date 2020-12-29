@@ -44,6 +44,16 @@ const (
   RUNC
 )
 
+type Input struct {
+  Name string `yaml:"name"`
+  Path string `yaml:"path"`
+}
+
+type Output struct {
+  Name string `yaml:"name"`
+  Path string `yaml:"path"`
+}
+
 type RunnerConfig struct {
   Log          *log.Logger
   WorkDir       string
