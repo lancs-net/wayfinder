@@ -50,6 +50,9 @@ type RunConfig struct {
   ScheduleGrace int
   WorkDir       string
   AllowOverride bool
+  HostNetwork   string
+  BridgeName    string
+  BridgeSubnet  string
 }
 
 var (
@@ -97,6 +100,27 @@ func init() {
     "O",
     false,
     "Override contents in directories (otherwise tasks allowed to fail).",
+  )
+  runCmd.PersistentFlags().StringVarP(
+    &runConfig.HostNetwork,
+    "hostnet",
+    "n",
+    "eth0",
+    "",
+  )
+  runCmd.PersistentFlags().StringVarP(
+    &runConfig.BridgeName,
+    "bridge",
+    "b",
+    "ukbench0",
+    "",
+  )
+  runCmd.PersistentFlags().StringVarP(
+    &runConfig.BridgeSubnet,
+    "subnet",
+    "s",
+    "172.88.0.1/16",
+    "",
   )
 }
 
