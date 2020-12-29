@@ -83,31 +83,39 @@ func setProcfsValue(path string, value string, dryRun bool) error {
   }
 
   // Check if the file exists
-  if _, err := os.Stat(path); os.IsNotExist(err) {
+  stat, err := os.Stat(path); 
+  if os.IsNotExist(err) {
     return fmt.Errorf("File does not exist: %s", path)
   }
 
-  dat, err := ioutil.ReadFile(path)
-  if err != nil {
-    if dryRun {
-      log.Warnf("Could not read file: %s", err)
-    } else {
-      return fmt.Errorf("Could not read file: %s", err)
-    }
-  }
-  
-  // Remove trailing \n if it exists
-  current := strings.TrimSuffix(string(dat), "\n")
-  
-  // No need to set identical value
-  if current == value {
-    return nil
-  }
-  
-  log.Infof("Setting %s from %s to %s", path, current, value)
+  // Check if this file receives input via stdin
+  if stat.Size() == 0 {
+    log.Infof("Setting %s to %s", path, value)
 
-  // Save the current value for later reset
-  procfs.remember(path, current, value)
+  // This is a regular proc file with a set value
+  } else {
+    dat, err := ioutil.ReadFile(path)
+    if err != nil {
+      if dryRun {
+        log.Warnf("Could not read file: %s", err)
+      } else {
+        return fmt.Errorf("Could not read file: %s", err)
+      }
+    }
+
+    // Remove trailing \n if it exists
+    current := strings.TrimSuffix(string(dat), "\n")
+
+    // No need to set identical value
+    if current == value {
+      return nil
+    }
+
+    log.Infof("Setting %s from %s to %s", path, current, value)
+
+    // Save the current value for later reset
+    procfs.remember(path, current, value)
+  }
   
   // Open file
   f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
