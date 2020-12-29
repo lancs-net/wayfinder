@@ -154,6 +154,9 @@ func doRunCmd(cmd *cobra.Command, args []string) {
 
 	j, err := job.NewJob(args[0], &job.RuntimeConfig{
     Cpus:          cpus,
+    BridgeName:    runConfig.BridgeName,
+    BridgeIface:   runConfig.HostNetwork,
+    BridgeSubnet:  runConfig.BridgeSubnet,
     ScheduleGrace: runConfig.ScheduleGrace,
     AllowOverride: runConfig.AllowOverride,
     WorkDir:       runConfig.WorkDir,

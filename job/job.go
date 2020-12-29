@@ -77,6 +77,9 @@ type Job struct {
 // RuntimeConfig contains details about the runtime of ukbench
 type RuntimeConfig struct {
   Cpus          []int
+  BridgeName      string
+  BridgeIface     string
+  BridgeSubnet    string
   ScheduleGrace   int
   WorkDir         string
   AllowOverride   bool
