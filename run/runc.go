@@ -276,6 +276,33 @@ func (r *RuncRunner) Init(in *[]Input, out *[]Output, dryRun bool) error {
     })
   }
 
+  // Set the argument as either the path or the cmd of the run
+  if r.Config.Cmd != "" {
+    entrypoint := path.Join("root", "entrypoint.sh")
+    entrypointPath := path.Join(r.Config.WorkDir, entrypoint)
+
+    f, err := os.OpenFile(
+      entrypointPath,
+      os.O_CREATE|os.O_WRONLY|os.O_TRUNC,
+      os.ModePerm,
+    )
+    if err != nil {
+      return fmt.Errorf("Could not create temporary cmd file: %s", err)
+    }
+
+    _, err = f.WriteString("#!/usr/bin/env sh\n")
+    if err != nil {
+      return fmt.Errorf("Could not write to temporary cmd file: %s", err)
+    }
+
+    _, err = f.WriteString(r.Config.Cmd)
+    if err != nil {
+      return fmt.Errorf("Could not write to temporary cmd file: %s", err)
+    }
+
+    f.Close()
+  }
+
   r.container, err = factory.Create(r.log.Prefix, config)
   if err != nil {
     return fmt.Errorf("Could not create container: %s", err)
