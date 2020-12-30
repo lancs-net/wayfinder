@@ -36,6 +36,7 @@ import (
 
   "golang.org/x/sys/unix"
   "github.com/opencontainers/runc/libcontainer"
+  "github.com/opencontainers/runtime-spec/specs-go"
   "github.com/opencontainers/runc/libcontainer/specconv"
   "github.com/opencontainers/runc/libcontainer/configs"
 
@@ -268,6 +269,20 @@ func (r *RuncRunner) Init(in *[]Input, out *[]Output, dryRun bool) error {
         Type: unix.RLIMIT_NOFILE,
         Hard: uint64(1025),
         Soft: uint64(1025),
+      },
+    },
+    Hooks: configs.Hooks{
+      configs.Prestart: configs.HookList{
+        configs.NewFunctionHook(func(s *specs.State) error {
+          ip, err := r.Bridge.Create(s)
+          if err != nil {
+            return err
+          }
+
+          r.log.Debugf("Container IP: %s\n", ip)
+
+          return nil
+        }),
       },
     },
   }
