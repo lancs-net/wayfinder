@@ -317,22 +317,28 @@ func (r *RuncRunner) Run() (int, error) {
     return 1, fmt.Errorf("Cannot run container, missing initialization")
   }
 
-  process := &libcontainer.Process{
-    Args:   []string{"/bin/echo", "\"hello, world\""},
-    Env:    []string{"PATH=/bin"},
+  taskProcess := &libcontainer.Process{
+    Cwd:    "/",
+    Env:    defaultEnvironment,
     User:   "root",
     Stdout: r.log,
     Stderr: r.log,
     Init:   true,
   }
 
-  err := r.container.Run(process)
+  if r.Config.Path != "" {
+    taskProcess.Args = []string{r.Config.Path}
+  } else if r.Config.Cmd != "" {
+    taskProcess.Args = []string{"/root/entrypoint.sh"}
+  }
+
+  err := r.container.Run(taskProcess)
   if err != nil {
-    return 1, fmt.Errorf("Could not run container: %s", err)
+    return 1, fmt.Errorf("Could not run task process: %s", err)
   }
 
   // Wait for the process to finish
-  state, err := process.Wait()
+  state, err := taskProcess.Wait()
   if err != nil {
     return 1, fmt.Errorf("Could not wait for container to finish: %s", err)
   }
