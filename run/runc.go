@@ -75,7 +75,7 @@ func (r *RuncRunner) Init(in *[]Input, out *[]Output, dryRun bool) error {
     return fmt.Errorf("Could not extract image: %s", err)
   }
 
-  r.log.Debug("Initializing runc container...")
+  r.log.Debug("Initialising runc container...")
 
   factory, err := libcontainer.New(
     "/var/lib/container",
