@@ -349,6 +349,7 @@ func (r *RuncRunner) Run() (int, error) {
 // Destroy the runc container
 func (r *RuncRunner) Destroy() error {
   if r.container != nil {
+    r.log.Debugf("Destroying container")
     r.container.Destroy()
     r.container = nil
   }
