@@ -129,9 +129,7 @@ func (r *RuncRunner) Init(in *[]Input, out *[]Output, dryRun bool) error {
       {Type: configs.NEWUTS},
       {Type: configs.NEWIPC},
       {Type: configs.NEWPID},
-      {Type: configs.NEWUSER},
       {Type: configs.NEWNET},
-      {Type: configs.NEWCGROUP},
     }),
     Cgroups: &configs.Cgroup{
       Name:      r.log.Prefix,
