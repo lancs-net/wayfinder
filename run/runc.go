@@ -33,6 +33,9 @@ package run
 import (
   "os"
   "fmt"
+  "path"
+  "strings"
+  "path/filepath"
 
   "golang.org/x/sys/unix"
   "github.com/opencontainers/runc/libcontainer"
