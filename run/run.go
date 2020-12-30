@@ -45,13 +45,16 @@ const (
 )
 
 type Input struct {
-  Name string `yaml:"name"`
-  Path string `yaml:"path"`
+  Name             string `yaml:"name"`
+  Source           string `yaml:"source"`
+  Destination      string `yaml:"destination"`
+  Options        []string `yaml:"options"`
 }
 
 type Output struct {
-  Name string `yaml:"name"`
-  Path string `yaml:"path"`
+  Name             string `yaml:"name"`
+  Source           string `yaml:"source"`
+  Destination      string `yaml:"destination"`
 }
 
 type RunnerConfig struct {
