@@ -160,7 +160,7 @@ func (atr *ActiveTaskRun) UUID() string {
 
 // Start the task's run
 func (atr *ActiveTaskRun) Start() (int, error) {
-  atr.log.Infof("Initialising run...")
+  atr.log.Infof("Starting run...")
 
   // Create the run's working directory
   workDir := path.Join(atr.Task.workDir, atr.run.Name)
