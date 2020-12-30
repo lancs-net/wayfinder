@@ -102,7 +102,7 @@ func (r *RuncRunner) Init(in *[]Input, out *[]Output, dryRun bool) error {
   r.log.Debug("Initialising runc container...")
 
   factory, err := libcontainer.New(
-    "/var/lib/container",
+    path.Join(r.Config.CacheDir, "libcontainer"),
     libcontainer.Cgroupfs,
     libcontainer.InitArgs(os.Args[0], "runc-init"),
   )
