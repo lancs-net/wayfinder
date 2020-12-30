@@ -43,6 +43,30 @@ import (
   "github.com/lancs-net/ukbench/log"
 )
 
+var (
+  defaultEnvironment = []string{
+    "TERM=xterm",
+    "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+  }
+  defaultMountFlags = unix.MS_NOEXEC | unix.MS_NOSUID | unix.MS_NODEV
+  defaultCapabilities = []string{
+    "CAP_CHOWN",
+    "CAP_DAC_OVERRIDE",
+    "CAP_FSETID",
+    "CAP_FOWNER",
+    "CAP_MKNOD",
+    "CAP_NET_RAW",
+    "CAP_SETGID",
+    "CAP_SETUID",
+    "CAP_SETFCAP",
+    "CAP_SETPCAP",
+    "CAP_NET_BIND_SERVICE",
+    "CAP_SYS_CHROOT",
+    "CAP_KILL",
+    "CAP_AUDIT_WRITE",
+  }
+)
+
 type RuncRunner struct {
   log      *log.Logger
   Config   *RunnerConfig
@@ -91,23 +115,6 @@ func (r *RuncRunner) Init(in *[]Input, out *[]Output, dryRun bool) error {
     allowedDevices = append(allowedDevices, &device.DeviceRule)
   }
 
-  defaultMountFlags := unix.MS_NOEXEC | unix.MS_NOSUID | unix.MS_NODEV
-  defaultCapabilities := []string{
-    "CAP_CHOWN",
-    "CAP_DAC_OVERRIDE",
-    "CAP_FSETID",
-    "CAP_FOWNER",
-    "CAP_MKNOD",
-    "CAP_NET_RAW",
-    "CAP_SETGID",
-    "CAP_SETUID",
-    "CAP_SETFCAP",
-    "CAP_SETPCAP",
-    "CAP_NET_BIND_SERVICE",
-    "CAP_SYS_CHROOT",
-    "CAP_KILL",
-    "CAP_AUDIT_WRITE",
-  }
   config := &configs.Config{
     Rootfs: r.Config.WorkDir,
     Capabilities: &configs.Capabilities{
