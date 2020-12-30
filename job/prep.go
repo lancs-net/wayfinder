@@ -199,7 +199,7 @@ func PrepareEnvironment(cpus []int, dryRun bool) error {
   for _, c := range cpus {
     err = setProcfsValue(fmt.Sprintf("/sys/devices/system/cpu/cpu%d/cpufreq/scaling_governor", c), "performance", dryRun)
     if err != nil {
-      return err
+      log.Warnf("Cannot set scaling governor: %s", err)
     }
   }
   
@@ -207,7 +207,7 @@ func PrepareEnvironment(cpus []int, dryRun bool) error {
   // TODO: Determine if this setting is even possible on this machine
   err = setProcfsValue("/sys/devices/system/cpu/intel_pstate/no_turbo", "1", dryRun)
   if err != nil {
-    return err
+    log.Warnf("Cannot set Intel Turbo mode: %s", err)
   }
 
   /*
