@@ -186,8 +186,8 @@ func (r *RuncRunner) Init(in *[]Input, out *[]Output, dryRun bool) error {
       {Type: configs.NEWCGROUP},
     }),
     Cgroups: &configs.Cgroup{
-      Name:   "ukbench",
-      Parent: "system",
+      Name:      r.log.Prefix,
+      Parent:    "",
       Resources: &configs.Resources{
         MemorySwappiness: nil,
         Devices:          allowedDevices,
