@@ -323,6 +323,7 @@ func (r *RuncRunner) Run() (int, error) {
     User:   "root",
     Stdout: r.log,
     Stderr: r.log,
+    Init:   true,
   }
 
   err := r.container.Run(process)
