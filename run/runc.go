@@ -203,19 +203,11 @@ func (r *RuncRunner) Init(in *[]Input, out *[]Output, dryRun bool) error {
         Device:      "sysfs",
         Flags:       defaultMountFlags | unix.MS_RDONLY,
       },
-    },
-    UidMappings: []configs.IDMap{
       {
-        ContainerID: 0,
-        HostID: 1000,
-        Size: 65536,
-      },
-    },
-    GidMappings: []configs.IDMap{
-      {
-        ContainerID: 0,
-        HostID: 1000,
-        Size: 65536,
+        Destination: "/sys/fs/cgroup",
+        Device:      "cgroup",
+        Source:      "cgroup",
+        Flags:       defaultMountFlags | unix.MS_RDONLY,
       },
     },
     Networks: []*configs.Network{
