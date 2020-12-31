@@ -46,6 +46,7 @@ const (
   WARNING
   ERROR
   FATAL
+  SUCCESS
 )
 
 // Logger is a base struct that could eventually maintain connections to
@@ -86,6 +87,10 @@ func (l *Logger) log(level LogLevel, format string, messages ...interface{}) {
   case FATAL:
     logType = "FATA"
     logColor = termenv.ANSIRed
+    break
+  case SUCCESS:
+    logType = " :) "
+    logColor = termenv.ANSIGreen
     break
   default:
     logType = "INFO"
@@ -194,6 +199,22 @@ func (l *Logger) Fatal(messages ...interface{}) {
 
 func (l *Logger) Fatalf(format string, messages ...interface{}) {
   l.log(FATAL, format, messages...)
+}
+
+func Success(messages ...interface{}) {
+  logger.log(SUCCESS, "%s", messages...)
+}
+
+func Successf(format string, messages ...interface{}) {
+  logger.log(SUCCESS, format, messages...)
+}
+
+func (l *Logger) Success(messages ...interface{}) {
+  l.log(SUCCESS, "%s", messages...)
+}
+
+func (l *Logger) Successf(format string, messages ...interface{}) {
+  l.log(SUCCESS, format, messages...)
 }
 
 // Write implements io.Writer
