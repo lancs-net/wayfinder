@@ -232,7 +232,7 @@ func (r *RuncRunner) Init(in *[]Input, out *[]Output, dryRun bool) error {
             return err
           }
 
-          r.log.Debugf("Container IP: %s\n", ip)
+          r.log.Debugf("Container IP: %s", ip)
 
           return nil
         }),
