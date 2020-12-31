@@ -379,9 +379,6 @@ func (j *Job) Start() error {
     // Continiously updates the number of available cores free so this
     // particular task's run so we can decide whether to schedule it.
     freeCores = tasksInFlight.FreeCores()
-
-    log.Debugf("Tasks waiting: %d, free cores: %d", j.waitList.Len(), len(freeCores))
-
     if len(freeCores) == 0 {
       continue
     }
