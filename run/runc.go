@@ -142,6 +142,12 @@ func (r *RuncRunner) Init(in *[]Input, out *[]Output, dryRun bool) error {
       Resources: &configs.Resources{
         MemorySwappiness: nil,
         Devices:          allowedDevices,
+        // Join the core ids together in a comma separated listed
+        CpusetCpus:       strings.Trim(
+          strings.Join(strings.Fields(fmt.Sprint(r.Config.CoreIds)), ","), "[]",
+        ),
+        // Set the share to 100 so that the container has the whole CPU share
+        CpuShares:        100,
       },
     },
     MaskPaths: []string{
