@@ -471,7 +471,7 @@ func (j *Job) Start() error {
       // provided to it.
       wg.Add(1) // Update wait group for this thread to complete
       go func() {
-        returnCode, err := activeTaskRun.Start()
+        returnCode, timeElapsed, err := activeTaskRun.Start()
         if err != nil {
           log.Errorf(
             "Could not complete run: %s: %s",

@@ -34,6 +34,7 @@ import (
   "io"
   "os"
   "fmt"
+  "time"
   "path"
 	"crypto/md5"
 
@@ -159,9 +160,7 @@ func (atr *ActiveTaskRun) UUID() string {
 }
 
 // Start the task's run
-func (atr *ActiveTaskRun) Start() (int, error) {
-  atr.log.Infof("Starting run...")
-
+func (atr *ActiveTaskRun) Start() (int, time.Duration, error) {
   // Create the run's working directory
   workDir := path.Join(atr.Task.workDir, atr.run.Name)
   if _, err := os.Stat(workDir); os.IsNotExist(err) && !atr.dryRun {
@@ -186,23 +185,24 @@ func (atr *ActiveTaskRun) Start() (int, error) {
   } else if atr.run.Cmd != "" {
     config.Cmd = atr.run.Cmd
   } else {
-    return 1, fmt.Errorf("Run did not specify path or cmd: %s", atr.run.Name)
+    return 1, -1, fmt.Errorf("Run did not specify path or cmd: %s", atr.run.Name)
   }
 
   runner, err := run.NewRunner(config, atr.bridge, atr.dryRun)
   if err != nil {
-    return 1, err
+    return 1, -1, err
   }
 
-  exitCode, err := runner.Run()
+  atr.log.Infof("Starting run...")
+  exitCode, timeElapsed, err := runner.Run()
   if err != nil {
     runner.Destroy()
-    return 1, fmt.Errorf("Could not start runner: %s", err)
+    return 1, -1, fmt.Errorf("Could not start runner: %s", err)
   }
 
   runner.Destroy()
 
-  return exitCode, nil
+  return exitCode, timeElapsed, nil
 }
 
 // IsDirEmpty is a method used to determine whether a directory is empty

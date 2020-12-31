@@ -32,6 +32,7 @@ package run
 
 import (
   "fmt"
+  "time"
 
   "github.com/lancs-net/ukbench/log"
 )
@@ -74,7 +75,7 @@ type RunnerConfig struct {
 
 type Runner interface {
   Init(*[]Input, *[]Output, bool)  error
-  Run()                           (int, error)
+  Run()                           (int, time.Duration, error)
   Destroy()                        error
 }
 

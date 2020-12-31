@@ -33,6 +33,7 @@ package run
 import (
   "os"
   "fmt"
+  "time"
   "path"
   "strings"
   "path/filepath"
@@ -74,7 +75,8 @@ type RuncRunner struct {
   log      *log.Logger
   Config   *RunnerConfig
   Bridge   *Bridge
-  container libcontainer.Container 
+  container libcontainer.Container
+  timer     time.Time
 }
 
 func (r *RuncRunner) Init(in *[]Input, out *[]Output, dryRun bool) error {
@@ -237,6 +239,21 @@ func (r *RuncRunner) Init(in *[]Input, out *[]Output, dryRun bool) error {
           return nil
         }),
       },
+
+      // The `StartContainer` hook is the closest way to run code before the
+      // process is executed by libcontainer[0].  However, this configuration is
+      // passed via a JSON serialized object which uses a path path to an
+      // executable script and not Go code, like that below.  As a result, we
+      // must use the earliest placable hook, `CreateRuntime`, we can call a
+      // within libcontainer before it runs the code specified by the run.
+      // [0]: https://github.com/opencontainers/runc/blob/v1.0.0-rc92/libcontainer/standard_init_linux.go#L214-L220
+      configs.CreateRuntime: configs.HookList{
+        configs.NewFunctionHook(func(s *specs.State) error {
+          r.log.Debugf("Starting timer")
+          r.timer = time.Now()
+          return nil
+        }),
+      },
     },
   }
 
@@ -305,9 +322,9 @@ func (r *RuncRunner) Init(in *[]Input, out *[]Output, dryRun bool) error {
 }
 
 // Run the runc container
-func (r *RuncRunner) Run() (int, error) {
+func (r *RuncRunner) Run() (int, time.Duration, error) {
   if r.container == nil {
-    return 1, fmt.Errorf("Cannot run container, missing initialization")
+    return 1, -1, fmt.Errorf("Cannot run container, missing initialization")
   }
 
   taskProcess := &libcontainer.Process{
@@ -327,16 +344,16 @@ func (r *RuncRunner) Run() (int, error) {
 
   err := r.container.Run(taskProcess)
   if err != nil {
-    return 1, fmt.Errorf("Could not run task process: %s", err)
+    return 1, -1, fmt.Errorf("Could not run task process: %s", err)
   }
 
   // Wait for the process to finish
   state, err := taskProcess.Wait()
   if err != nil {
-    return 1, fmt.Errorf("Could not wait for container to finish: %s", err)
+    return 1, -1, fmt.Errorf("Could not wait for container to finish: %s", err)
   }
 
-  return state.ExitCode(), nil
+  return state.ExitCode(), time.Since(r.timer), nil
 }
 
 // Destroy the runc container
