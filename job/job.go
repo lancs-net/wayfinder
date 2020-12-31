@@ -494,9 +494,11 @@ func (j *Job) Start() error {
           task.(*Task).Cancel()
         }
 
-        // Set the return code
-
-        log.Infof("Run finished: %s", activeTaskRun.UUID())
+        if timeElapsed > 0 {
+          log.Successf("Run %s finished in %s", activeTaskRun.UUID(), timeElapsed)
+        } else {
+          log.Errorf("Run %s finished", activeTaskRun.UUID())
+        }
         wg.Done() // We're done here
 
         // Remove utilized cores from this active task's run
