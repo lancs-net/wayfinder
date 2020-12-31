@@ -168,6 +168,11 @@ func (atr *ActiveTaskRun) Start() (int, time.Duration, error) {
     os.MkdirAll(workDir, os.ModePerm)
   }
 
+  var env []string
+  for _, param := range atr.Task.Params {
+    env = append(env, fmt.Sprintf("%s=%s", param.Name, param.Value))
+  }
+
   config := &run.RunnerConfig{
     Log:           atr.log,
     CacheDir:      atr.Task.cacheDir,
@@ -179,6 +184,7 @@ func (atr *ActiveTaskRun) Start() (int, time.Duration, error) {
     Devices:       atr.run.Devices,
     Inputs:        atr.Task.Inputs,
     Outputs:       atr.Task.Outputs,
+    Env:           env,
   }
   if atr.run.Path != "" {
     config.Path = atr.run.Path

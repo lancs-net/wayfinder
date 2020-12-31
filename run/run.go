@@ -71,6 +71,7 @@ type RunnerConfig struct {
   AllowOverride    bool
   Inputs        *[]Input
   Outputs       *[]Output
+  Env            []string
 }
 
 type Runner interface {

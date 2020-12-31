@@ -329,7 +329,7 @@ func (r *RuncRunner) Run() (int, time.Duration, error) {
 
   taskProcess := &libcontainer.Process{
     Cwd:    "/",
-    Env:    defaultEnvironment,
+    Env:    append(defaultEnvironment, r.Config.Env...),
     User:   "root",
     Stdout: r.log,
     Stderr: r.log,
