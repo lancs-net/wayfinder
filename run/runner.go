@@ -453,6 +453,14 @@ func (r *Runner) Destroy() error {
     r.log.Debugf("Destroying container")
     r.container.Destroy()
     r.container = nil
+    
+    // Delete the directory
+    dir := path.Join(
+      r.Config.CacheDir,
+      "libcontainer",
+      r.log.Prefix,
+    )
+    return os.RemoveAll(dir)
   }
   return nil
 }
