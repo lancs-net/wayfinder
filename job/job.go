@@ -41,6 +41,8 @@ import (
   "io/ioutil"
 
   "gopkg.in/yaml.v2"
+  "github.com/novln/docker-parser"
+
   "github.com/lancs-net/ukbench/log"
   "github.com/lancs-net/ukbench/run"
 )
@@ -371,6 +373,21 @@ func (j *Job) tasks() ([]*Task, error) {
 func (j *Job) Start() error {
   var freeCores []int
   var wg sync.WaitGroup
+
+  // Pre-emptively pull all images
+  for _, r := range j.Runs {
+    ref, err := dockerparser.Parse(r.Image)
+    if err != nil {
+      return fmt.Errorf("Could not parse image: %s", err)
+    }
+
+    log.Infof("Pulling %s...", ref.Remote())
+
+    _, err = run.PullImage(ref.Remote(), j.bridge.CacheDir)
+    if err != nil {
+      return fmt.Errorf("Could not pull image: %s", err)
+    }
+  }
 
   // Continuously iterate over the wait list and the queue of the task to
   // determine whether there is space for the task's run to be scheduled
