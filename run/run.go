@@ -54,8 +54,7 @@ type Input struct {
 
 type Output struct {
   Name             string `yaml:"name"`
-  Source           string `yaml:"source"`
-  Destination      string `yaml:"destination"`
+  Path             string `yaml:"path"`
 }
 
 type RunnerConfig struct {
