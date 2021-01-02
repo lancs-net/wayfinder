@@ -86,29 +86,6 @@ type Image struct {
   Tag        string
 }
 
-func ParseImageName(s string) (*Image, error) {
-  matches := ReferenceRegexp.FindStringSubmatch(s)
-  if matches == nil {
-    if s == "" {
-      return nil, ErrNameEmpty
-    }
-    // TODO(dmcgowan): Provide more specific and helpful error
-    return nil, ErrReferenceInvalidFormat
-  }
-
-  if len(matches[2]) > NameTotalLengthMax {
-    return nil, ErrNameTooLong
-  }
-
-  image := &Image{
-    Runtime: matches[2],
-    Name:    matches[3],
-    Tag:     matches[4],
-  }
-
-  return image, nil
-}
-
 // PullImage downloads an image
 func PullImage(image, cacheDir string) (v1.Image, error) {
   var options []crane.Option
