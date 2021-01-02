@@ -268,12 +268,13 @@ func parseParamInt(param *JobParam) ([]TaskParam, error) {
 
     // Use exponential step
     } else if param.StepMode == "power" {
-      for i := min; i <= max; math.Pow(float64(step), float64(i)) {
+      for i, j := min, min; i <= max; j++ {
         params = append(params, TaskParam{
           Name:  param.Name,
           Type:  param.Type,
           Value: strconv.Itoa(i),
         })
+        i = int(math.Pow(float64(step), float64(j)))
       }
 
     // Unknown step mode
