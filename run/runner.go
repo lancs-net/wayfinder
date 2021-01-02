@@ -39,6 +39,7 @@ import (
   "path/filepath"
 
   "golang.org/x/sys/unix"
+  "github.com/otiai10/copy"
   "github.com/novln/docker-parser"
   "github.com/opencontainers/runc/libcontainer"
   "github.com/opencontainers/runtime-spec/specs-go"
@@ -415,6 +416,19 @@ func (r *Runner) Run() (int, time.Duration, error) {
   state, err := taskProcess.Wait()
   if err != nil {
     return 1, -1, fmt.Errorf("Could not wait for container to finish: %s", err)
+  }
+
+  // Recursively iterate through all files in the build work dir and delete
+  // files and folders which do not match our list of outputs
+  for _, output := range *r.out {
+    r.log.Debugf("Copying result: %s", output.Path)
+    err := copy.Copy(
+      path.Join(r.rootfs, output.Path),
+      path.Join(r.Config.ResultsDir, output.Path),
+    )
+    if err != nil {
+      return state.ExitCode(), time.Since(r.timer), fmt.Errorf("Could not copy result: %s", err)
+    }
   }
 
   return state.ExitCode(), time.Since(r.timer), nil

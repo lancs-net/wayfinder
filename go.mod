@@ -13,6 +13,7 @@ require (
 	github.com/novln/docker-parser v1.0.0
 	github.com/opencontainers/runc v1.0.0-rc92
 	github.com/opencontainers/runtime-spec v1.0.3-0.20200728170252-4d89ac9fbff6
+	github.com/otiai10/copy v1.4.2
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/cobra v1.1.1
 	github.com/tidwall/gjson v1.6.7
