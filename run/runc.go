@@ -39,6 +39,7 @@ import (
   "path/filepath"
 
   "golang.org/x/sys/unix"
+  "github.com/novln/docker-parser"
   "github.com/opencontainers/runc/libcontainer"
   "github.com/opencontainers/runtime-spec/specs-go"
   "github.com/opencontainers/runc/libcontainer/specconv"
@@ -71,7 +72,7 @@ var (
   }
 )
 
-type RuncRunner struct {
+type Runner struct {
   log        *log.Logger
   Config     *RunnerConfig
   Bridge     *Bridge
@@ -80,7 +81,57 @@ type RuncRunner struct {
   out      *[]Output
 }
 
-func (r *RuncRunner) Init(in *[]Input, out *[]Output, dryRun bool) error {
+type Input struct {
+  Name             string `yaml:"name"`
+  Source           string `yaml:"source"`
+  Destination      string `yaml:"destination"`
+  Options        []string `yaml:"options"`
+}
+
+type Output struct {
+  Name             string `yaml:"name"`
+  Path             string `yaml:"path"`
+}
+
+type RunnerConfig struct {
+  Log             *log.Logger
+  WorkDir          string
+  CacheDir         string
+  Name             string
+  Image            string
+  CoreIds        []int
+  Devices        []string
+  Path             string
+  Cmd              string
+  AllowOverride    bool
+  Inputs        *[]Input
+  Outputs       *[]Output
+  Env            []string
+}
+
+// NewRunner returns the name of the 
+func NewRunner(cfg *RunnerConfig, bridge *Bridge, dryRun bool) (*Runner, error) {
+  ref, err := dockerparser.Parse(cfg.Image)
+  if err != nil {
+    return nil, err
+  }
+
+  cfg.Image = ref.Remote()
+
+  runner := &Runner{
+    Config: cfg,
+    Bridge: bridge,
+  }
+
+  err = runner.Init(cfg.Inputs, cfg.Outputs, dryRun)
+  if err != nil {
+    return nil, fmt.Errorf("Could not initialize runner: %s", err)
+  }
+
+  return runner, nil
+}
+
+func (r *Runner) Init(in *[]Input, out *[]Output, dryRun bool) error {
   // Set the logger
   r.log = r.Config.Log
   
@@ -332,7 +383,7 @@ func (r *RuncRunner) Init(in *[]Input, out *[]Output, dryRun bool) error {
 }
 
 // Run the runc container
-func (r *RuncRunner) Run() (int, time.Duration, error) {
+func (r *Runner) Run() (int, time.Duration, error) {
   if r.container == nil {
     return 1, -1, fmt.Errorf("Cannot run container, missing initialization")
   }
@@ -367,7 +418,7 @@ func (r *RuncRunner) Run() (int, time.Duration, error) {
 }
 
 // Destroy the runc container
-func (r *RuncRunner) Destroy() error {
+func (r *Runner) Destroy() error {
   if r.container != nil {
     r.log.Debugf("Destroying container")
     r.container.Destroy()
