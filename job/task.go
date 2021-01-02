@@ -61,7 +61,7 @@ type Task struct {
 }
 
 // Init prepare the task 
-func (t *Task) Init(workDir string, allowOverride bool, runs *[]Run, dryRun bool) error {
+func (t *Task) Init(workDir string, allowOverride bool, runs *[]run.Run, dryRun bool) error {
   // Create a queue of runs for this particular task
   t.runs = NewQueue(len(*runs))
 
@@ -127,7 +127,7 @@ func (t *Task) UUID() string {
 // ActiveTaskRun contains information about a particular task's run.
 type ActiveTaskRun struct {
   Task     *Task
-  run      *Run
+  run      *run.Run
   CoreIds []int // the exact core numbers this task is using
   log      *log.Logger
   workDir   string
@@ -137,7 +137,7 @@ type ActiveTaskRun struct {
 
 // NewActiveTaskRun initializes the current task and the run step for the
 // the specified cores.
-func NewActiveTaskRun(task *Task, run Run, coreIds []int, bridge *run.Bridge, dryRun bool) (*ActiveTaskRun, error) {
+func NewActiveTaskRun(task *Task, run run.Run, coreIds []int, bridge *run.Bridge, dryRun bool) (*ActiveTaskRun, error) {
   atr := &ActiveTaskRun{
     Task:    task,
     run:    &run,

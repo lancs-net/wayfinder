@@ -58,21 +58,11 @@ type JobParam struct {
   StepMode  string `yaml:"step_mode"`
 }
 
-type Run struct {
-  Name      string `yaml:"name"`
-  Image     string `yaml:"image"`
-  Cores     int    `yaml:"cores"`
-  Devices []string `yaml:"devices"`
-  Cmd       string `yaml:"cmd"`
-  Path      string `yaml:"path"`
-  exitCode  int
-}
-
 type Job struct {
   Params        []JobParam   `yaml:"params"`
   Inputs        []run.Input  `yaml:"inputs"`
   Outputs       []run.Output `yaml:"outputs"`
-  Runs          []Run        `yaml:"runs"`
+  Runs          []run.Run    `yaml:"runs"`
   waitList     *List
   scheduleGrace int
   dryRun        bool
@@ -418,7 +408,7 @@ func (j *Job) Start() error {
 
     // Can we schedule this run?  Use an else if here so we don't ruin the
     // ordering of the iterator `i`
-    } else if len(freeCores) >= nextRun.(Run).Cores {
+    } else if len(freeCores) >= nextRun.(run.Run).Cores {
       // Check if the peaked run is currently active
       tasksInFlight.RLock()
       for _, atr := range tasksInFlight.All() {
@@ -433,7 +423,7 @@ func (j *Job) Start() error {
 
       // Select some core IDs for this run based on how many it requires
       var cores []int
-      for j := 0; j < nextRun.(Run).Cores; j++ {
+      for j := 0; j < nextRun.(run.Run).Cores; j++ {
         cores = append(cores, freeCores[len(freeCores)-1])
         freeCores = freeCores[:len(freeCores)-1]
       }
@@ -441,7 +431,7 @@ func (j *Job) Start() error {
       // Initialize the task run
       activeTaskRun, err := NewActiveTaskRun(
         task.(*Task),
-        nextRun.(Run),
+        nextRun.(run.Run),
         cores,
         j.bridge,
         j.dryRun,
