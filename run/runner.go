@@ -440,7 +440,11 @@ func (r *Runner) Run() (int, time.Duration, error) {
     }
   }
 
-  return state.ExitCode(), time.Since(r.timer), nil
+  // Delete the rootfs
+  r.log.Debugf("Deleting rootfs: %s", r.rootfs)
+  err = os.RemoveAll(r.rootfs)
+
+  return state.ExitCode(), time.Since(r.timer), err
 }
 
 // Destroy the runc container
