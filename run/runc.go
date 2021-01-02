@@ -72,11 +72,12 @@ var (
 )
 
 type RuncRunner struct {
-  log      *log.Logger
-  Config   *RunnerConfig
-  Bridge   *Bridge
-  container libcontainer.Container
-  timer     time.Time
+  log        *log.Logger
+  Config     *RunnerConfig
+  Bridge     *Bridge
+  container   libcontainer.Container
+  timer       time.Time
+  out      *[]Output
 }
 
 func (r *RuncRunner) Init(in *[]Input, out *[]Output, dryRun bool) error {
@@ -291,6 +292,9 @@ func (r *RuncRunner) Init(in *[]Input, out *[]Output, dryRun bool) error {
       Flags:       flags,
     })
   }
+
+  // Save the list of outputs for later
+  r.out = out
 
   // Set the argument as either the path or the cmd of the run
   if r.Config.Cmd != "" {
