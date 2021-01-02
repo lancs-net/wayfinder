@@ -55,7 +55,7 @@ type Task struct {
   Outputs    *[]run.Output
   runs         *Queue
   uuid          string
-  workDir       string
+  resultsDir    string
   cacheDir      string
   AllowOverride bool
 }
@@ -66,26 +66,26 @@ func (t *Task) Init(workDir string, allowOverride bool, runs *[]Run, dryRun bool
   t.runs = NewQueue(len(*runs))
 
   // Set the working directory
-  t.workDir = path.Join(workDir, "results", t.UUID())
+  t.resultsDir = path.Join(workDir, "results", t.UUID())
   t.cacheDir = path.Join(workDir, ".cache")
 
   // Set additional task configuration
   t.AllowOverride = allowOverride
 
-  // Create a working directory for this task
-  if _, err := os.Stat(t.workDir); os.IsNotExist(err) {
+  // Create a results directory for this task
+  if _, err := os.Stat(t.resultsDir); os.IsNotExist(err) {
     if !dryRun {
-      os.MkdirAll(workDir, os.ModePerm)
+      os.MkdirAll(t.resultsDir, os.ModePerm)
     }
 
   // Check if we're allowed to override a non-empty directory
   } else {
-    isEmpty, err := IsDirEmpty(t.workDir)
+    isEmpty, err := IsDirEmpty(t.resultsDir)
     if err != nil {
       return err
     }
     if !isEmpty && !allowOverride {
-      return fmt.Errorf("Task directory not empty: %s", t.workDir)
+      return fmt.Errorf("Task directory not empty: %s", t.resultsDir)
     }
 
     if !dryRun {
@@ -161,13 +161,6 @@ func (atr *ActiveTaskRun) UUID() string {
 
 // Start the task's run
 func (atr *ActiveTaskRun) Start() (int, time.Duration, error) {
-  // Create the run's working directory
-  workDir := path.Join(atr.Task.workDir, atr.run.Name)
-  if _, err := os.Stat(workDir); os.IsNotExist(err) && !atr.dryRun {
-    atr.log.Debugf("Creating directory: %s", workDir)
-    os.MkdirAll(workDir, os.ModePerm)
-  }
-
   var env []string
   for _, param := range atr.Task.Params {
     env = append(env, fmt.Sprintf("%s=%s", param.Name, param.Value))
@@ -176,7 +169,7 @@ func (atr *ActiveTaskRun) Start() (int, time.Duration, error) {
   config := &run.RunnerConfig{
     Log:           atr.log,
     CacheDir:      atr.Task.cacheDir,
-    WorkDir:       workDir,
+    ResultsDir:    atr.Task.resultsDir,
     AllowOverride: atr.Task.AllowOverride,
     Name:          atr.run.Name,
     Image:         atr.run.Image,

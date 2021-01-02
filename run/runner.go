@@ -95,7 +95,7 @@ type Output struct {
 
 type RunnerConfig struct {
   Log             *log.Logger
-  WorkDir          string
+  ResultsDir       string
   CacheDir         string
   Name             string
   Image            string
@@ -149,9 +149,11 @@ func (r *Runner) Init(in *[]Input, out *[]Output, dryRun bool) error {
   
   r.log.Debugf("Pulled: %s", digest)
 
+  rootfs := path.Join(r.Config.CacheDir, "rootfs", r.log.Prefix)
+
   // Extract the image to the desired location
-  r.log.Infof("Extracting image to: %s", r.Config.WorkDir)
-  err = UnpackImage(image, r.Config.CacheDir, r.Config.WorkDir, r.Config.AllowOverride)
+  r.log.Infof("Extracting image to: %s", rootfs)
+  err = UnpackImage(image, r.Config.CacheDir, rootfs, r.Config.AllowOverride)
   if err != nil {
     return fmt.Errorf("Could not extract image: %s", err)
   }
@@ -173,7 +175,7 @@ func (r *Runner) Init(in *[]Input, out *[]Output, dryRun bool) error {
   }
 
   config := &configs.Config{
-    Rootfs: r.Config.WorkDir,
+    Rootfs: rootfs,
     Capabilities: &configs.Capabilities{
       Bounding: defaultCapabilities,
       Effective: defaultCapabilities,
@@ -350,7 +352,7 @@ func (r *Runner) Init(in *[]Input, out *[]Output, dryRun bool) error {
   // Set the argument as either the path or the cmd of the run
   if r.Config.Cmd != "" {
     entrypoint := path.Join("root", "entrypoint.sh")
-    entrypointPath := path.Join(r.Config.WorkDir, entrypoint)
+    entrypointPath := path.Join(rootfs, entrypoint)
 
     f, err := os.OpenFile(
       entrypointPath,
