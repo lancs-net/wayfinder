@@ -418,8 +418,7 @@ func (r *Runner) Run() (int, time.Duration, error) {
     return 1, -1, fmt.Errorf("Could not wait for container to finish: %s", err)
   }
 
-  // Recursively iterate through all files in the build work dir and delete
-  // files and folders which do not match our list of outputs
+  // Copy output files to results directory from the container's rootfs
   for _, output := range *r.out {
     r.log.Debugf("Copying result: %s", output.Path)
     err := copy.Copy(
