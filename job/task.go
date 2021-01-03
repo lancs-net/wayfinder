@@ -36,6 +36,7 @@ import (
   "fmt"
   "time"
   "path"
+  "strings"
 	"crypto/md5"
 
   "github.com/lancs-net/ukbench/log"
@@ -164,6 +165,14 @@ func (atr *ActiveTaskRun) Start() (int, time.Duration, error) {
   var env []string
   for _, param := range atr.Task.Params {
     env = append(env, fmt.Sprintf("%s=%s", param.Name, param.Value))
+  }
+
+  env = append(env, fmt.Sprintf("UKBENCH_TOTAL_CORES=%d", len(atr.CoreIds)))
+  env = append(env, fmt.Sprintf("UKBENCH_CORES=%s", strings.Trim(
+    strings.Join(strings.Fields(fmt.Sprint(atr.CoreIds)), " "), "[]",
+  )))
+  for i, coreId := range atr.CoreIds {
+    env = append(env, fmt.Sprintf("UKBENCH_CORE_ID%d=%d", i, coreId))
   }
 
   config := &run.RunnerConfig{
