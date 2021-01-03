@@ -380,6 +380,9 @@ func (j *Job) Start() error {
     }
   }
 
+  curTaskNum := 0
+  totalTasks := j.waitList.Len()
+
   // Continuously iterate over the wait list and the queue of the task to
   // determine whether there is space for the task's run to be scheduled
   // on the available list of cores.
@@ -445,7 +448,12 @@ func (j *Job) Start() error {
         goto iterator
       }
 
-      log.Infof("Scheduling task run %s...", activeTaskRun.UUID())
+      curTaskNum++
+      log.Infof("Scheduling task run %s (%d/%d)...",
+        activeTaskRun.UUID(),
+        curTaskNum,
+        totalTasks,
+      )
 
       // Finally, we can dequeue the run since we are about to schedule it
       nextRun, err = task.(*Task).runs.Dequeue()
