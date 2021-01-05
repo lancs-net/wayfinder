@@ -181,9 +181,45 @@ func (r *Runner) Init(in *[]Input, out *[]Output, dryRun bool) error {
     return err
   }
 
-  var allowedDevices []*configs.DeviceRule
-  for _, device := range specconv.AllowedDevices {
-    allowedDevices = append(allowedDevices, &device.DeviceRule)
+  allowedDevices := specconv.AllowedDevices
+  for _, device := range r.Config.Devices {
+    switch device {
+    case "/dev/kvm":
+      allowedDevices = append(allowedDevices, &configs.Device{
+        Path:       "/dev/kvm",
+        FileMode:   0432,
+        Uid:        0,
+        Gid:        104,
+        DeviceRule: configs.DeviceRule{
+          Type:        configs.CharDevice,
+          Major:       10,
+          Minor:       232,
+          Permissions: "rwm",
+          Allow:       true,
+        },
+      })
+    case "/dev/net/tun":
+      allowedDevices = append(allowedDevices, &configs.Device{
+        Path:       "/dev/net/tun",
+        FileMode:   438,
+        Uid:        0,
+        Gid:        104,
+        DeviceRule: configs.DeviceRule{
+          Type:        configs.CharDevice,
+          Major:       10,
+          Minor:       200,
+          Permissions: "rwm",
+          Allow:       true,
+        },
+      })
+    default:
+      r.log.Warnf("Unknown device: %s", device)
+    }
+  }
+
+  var allowedDeviceRules []*configs.DeviceRule
+  for _, device := range allowedDevices {
+    allowedDeviceRules = append(allowedDeviceRules, &device.DeviceRule)
   }
 
   config := &configs.Config{
@@ -207,7 +243,7 @@ func (r *Runner) Init(in *[]Input, out *[]Output, dryRun bool) error {
       Parent:    "",
       Resources: &configs.Resources{
         MemorySwappiness: nil,
-        Devices:          allowedDevices,
+        Devices:          allowedDeviceRules,
         // Join the core ids together in a comma separated listed
         CpusetCpus:       strings.Trim(
           strings.Join(strings.Fields(fmt.Sprint(r.Config.CoreIds)), ","), "[]",
@@ -235,7 +271,7 @@ func (r *Runner) Init(in *[]Input, out *[]Output, dryRun bool) error {
       "/proc/sys",
       "/proc/sysrq-trigger",
     },
-    Devices:  specconv.AllowedDevices,
+    Devices:  allowedDevices,
     Hostname: r.log.Prefix,
     Mounts: []*configs.Mount{
       {
