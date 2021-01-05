@@ -491,7 +491,7 @@ func (r *Runner) Run() (int, time.Duration, error) {
       path.Join(r.Config.ResultsDir, output.Path),
     )
     if err != nil {
-      return state.ExitCode(), time.Since(r.timer), fmt.Errorf("Could not copy result: %s", err)
+      r.log.Warnf("Could not copy result: %s", err)
     }
   }
 
