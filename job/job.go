@@ -125,6 +125,28 @@ func NewJob(filePath string, cfg *RuntimeConfig, dryRun bool) (*Job, error) {
     return nil, err
   }
 
+  // Write a tasks file containing all the permutations
+  tasksJson := make(map[string]interface{})
+  for _, task := range tasks {
+    params := make(map[string]string)
+    for _, param := range task.Params {
+      params[param.Name] = param.Value
+    }
+    tasksJson[task.UUID()] = params
+  }
+
+  b, err := json.MarshalIndent(tasksJson, "", "\t")
+  if err != nil {
+    return nil, fmt.Errorf("Could not marshal JSON of tasks: %s", err)
+  }
+
+  tasksJsonFile := path.Join(cfg.WorkDir, "/tasks.json")
+  log.Debugf("Writing tasks file %s...", tasksJsonFile)
+  err = ioutil.WriteFile(tasksJsonFile, b, 0644)
+  if err != nil {
+    return nil, fmt.Errorf("Could not write tasks file: %s", err)
+  }
+
   // Create a queue of size equal to the number of cores to eventually use
   job.waitList = NewList(len(tasks))
 
