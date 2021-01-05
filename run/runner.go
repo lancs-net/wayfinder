@@ -74,13 +74,14 @@ var (
 )
 
 type Run struct {
-  Name      string `yaml:"name"`
-  Image     string `yaml:"image"`
-  Cores     int    `yaml:"cores"`
-  Devices []string `yaml:"devices"`
-  Cmd       string `yaml:"cmd"`
-  Path      string `yaml:"path"`
-  exitCode  int
+  Name           string `yaml:"name"`
+  Image          string `yaml:"image"`
+  Cores          int    `yaml:"cores"`
+  Devices      []string `yaml:"devices"`
+  Cmd            string `yaml:"cmd"`
+  Path           string `yaml:"path"`
+  Capabilities []string
+  exitCode       int
 }
 
 type Runner struct {
@@ -119,6 +120,7 @@ type RunnerConfig struct {
   Inputs        *[]Input
   Outputs       *[]Output
   Env            []string
+  Capabilities   []string
 }
 
 // NewRunner returns the name of the 
@@ -234,14 +236,19 @@ func (r *Runner) Init(in *[]Input, out *[]Output, dryRun bool) error {
     allowedDeviceRules = append(allowedDeviceRules, &device.DeviceRule)
   }
 
+  capabilities := defaultCapabilities
+  for _, capability := range r.Config.Capabilities {
+    capabilities = append(capabilities, capability)
+  }
+
   config := &configs.Config{
     Rootfs: r.rootfs,
     Capabilities: &configs.Capabilities{
-      Bounding: defaultCapabilities,
-      Effective: defaultCapabilities,
-      Inheritable: defaultCapabilities,
-      Permitted: defaultCapabilities,
-      Ambient: defaultCapabilities,
+      Bounding: capabilities,
+      Effective: capabilities,
+      Inheritable: capabilities,
+      Permitted: capabilities,
+      Ambient: capabilities,
     },
     Namespaces: configs.Namespaces([]configs.Namespace{
       {Type: configs.NEWNS},

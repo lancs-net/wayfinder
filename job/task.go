@@ -187,6 +187,7 @@ func (atr *ActiveTaskRun) Start() (int, time.Duration, error) {
     Inputs:        atr.Task.Inputs,
     Outputs:       atr.Task.Outputs,
     Env:           env,
+    Capabilities:  atr.run.Capabilities,
   }
   if atr.run.Path != "" {
     config.Path = atr.run.Path
