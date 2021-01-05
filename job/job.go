@@ -403,7 +403,7 @@ func (j *Job) Start() error {
   }
 
   curTaskNum := 0
-  totalTasks := j.waitList.Len()
+  totalTasks := j.waitList.Len() * len(j.Runs)
 
   // Continuously iterate over the wait list and the queue of the task to
   // determine whether there is space for the task's run to be scheduled
