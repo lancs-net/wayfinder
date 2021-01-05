@@ -170,6 +170,18 @@ func (r *Runner) Init(in *[]Input, out *[]Output, dryRun bool) error {
     return fmt.Errorf("Could not extract image: %s", err)
   }
 
+  // Copy outputs between runs
+  for _, output := range *out {
+    r.log.Debugf("Copying output into rootfs: %s", output.Path)
+    err := copy.Copy(
+      path.Join(r.Config.ResultsDir, output.Path),
+      path.Join(r.rootfs, output.Path),
+    )
+    if err != nil {
+      r.log.Warnf("Could not copy result: %s", err)
+    }
+  }
+
   r.log.Debug("Initialising runc container...")
 
   factory, err := libcontainer.New(
