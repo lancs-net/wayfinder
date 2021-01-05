@@ -52,6 +52,11 @@ type Bridge struct {
 
 // Init prepares netns
 func (b *Bridge) Init(dryRun bool) error {
+  return nil
+}
+
+// Create a veth pair with the bridge for the container
+func (b *Bridge) Create(s *specs.State) (net.IP, error) {
   // Create the bridge using netns
   b.netOpt.ContainerInterface = b.Interface
   b.netOpt.BridgeName = b.Name
@@ -60,18 +65,10 @@ func (b *Bridge) Init(dryRun bool) error {
   b.netOpt.StateDir = b.CacheDir
 
   log.Debugf("Creating bridge %s...", b.Name)
-  if !dryRun {
-    var err error
-    b.client, err = network.New(b.netOpt)
-    if err != nil {
-      return err
-    }
+  client, err := network.New(b.netOpt)
+  if err != nil {
+    return nil, err
   }
-
-  return nil
-}
-
-// Create a veth pair with the bridge for the container
-func (b *Bridge) Create(s *specs.State) (net.IP, error) {
-  return b.client.Create(s, b.brOpt, "")
+  
+  return client.Create(s, b.brOpt, "")
 }
