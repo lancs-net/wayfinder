@@ -3,10 +3,10 @@
 set -xe
 
 QEMU_GUEST=${QEMU_GUEST:-$(which qemu-guest)}
-BRIDGE=ukbench0
+BRIDGE=ukbench$UKBENCH_CORE_ID0 # create a unique bridge
 BRIDGE_IP="172.130.0.1"
 UNIKERNEL_IMAGE=${UNIKERNEL_IMAGE:-"/usr/src/unikraft/apps/iperf3/build/iperf3_kvm-x86_64"}
-UNIKERNEL_IP="172.130.0.2"
+UNIKERNEL_IP="172.130.0.${UKBENCH_CORE_ID0}"
 
 if [[ ! -f $UNIKERNEL_IMAGE ]]; then
   echo "Missing unikernel image!"
