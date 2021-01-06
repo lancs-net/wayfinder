@@ -13,6 +13,13 @@ if [[ ! -f $UNIKERNEL_IMAGE ]]; then
   exit 1
 fi
 
+function cleanup {
+  ifconfig $BRIDGE down || true
+  brctl delbr $BRIDGE || true
+}
+
+trap "cleanup" EXIT
+
 # Install testing tools
 apt-get update
 apt-get install -y \
