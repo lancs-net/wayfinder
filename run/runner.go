@@ -483,29 +483,33 @@ func (r *Runner) Run() (int, time.Duration, error) {
     return 1, -1, fmt.Errorf("Could not wait for container to finish: %s", err)
   }
 
-  // Copy output files to results directory from the container's rootfs
-  for _, output := range *r.out {
-    r.log.Debugf("Copying result: %s", output.Path)
-    err := copy.Copy(
-      path.Join(r.rootfs, output.Path),
-      path.Join(r.Config.ResultsDir, output.Path),
-    )
-    if err != nil {
-      r.log.Warnf("Could not copy result: %s", err)
-    }
-  }
-
-  // Delete the rootfs
-  r.log.Debugf("Deleting rootfs: %s", r.rootfs)
-  err = os.RemoveAll(r.rootfs)
-
-  return state.ExitCode(), time.Since(r.timer), err
+  return state.ExitCode(), time.Since(r.timer), nil
 }
 
 // Destroy the runc container
 func (r *Runner) Destroy() error {
   if r.container != nil {
     r.log.Debugf("Destroying container")
+
+    // Copy output files to results directory from the container's rootfs
+    for _, output := range *r.out {
+      r.log.Debugf("Copying result: %s", output.Path)
+      err := copy.Copy(
+        path.Join(r.rootfs, output.Path),
+        path.Join(r.Config.ResultsDir, output.Path),
+      )
+      if err != nil {
+        r.log.Warnf("Could not copy result: %s", err)
+      }
+    }
+
+    // Delete the rootfs
+    r.log.Debugf("Deleting rootfs: %s", r.rootfs)
+    err := os.RemoveAll(r.rootfs)
+    if err != nil {
+      return fmt.Errorf("Could not delete rootfs: %s", err)
+    }
+
     r.container.Destroy()
     r.container = nil
     
@@ -515,7 +519,11 @@ func (r *Runner) Destroy() error {
       "libcontainer",
       r.log.Prefix,
     )
-    return os.RemoveAll(dir)
+
+    err = os.RemoveAll(dir)
+    if err != nil {
+      return fmt.Errorf("Could not delete container cache: %s", err)
+    }
   }
   return nil
 }
