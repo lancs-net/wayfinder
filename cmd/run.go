@@ -65,6 +65,7 @@ var (
     DisableFlagsInUseLine: true,
   }
   runConfig = &RunConfig{}
+  activeJob *job.Job
 )
 
 func init() {
@@ -153,7 +154,7 @@ func doRunCmd(cmd *cobra.Command, args []string) {
     os.MkdirAll(cacheDir, os.ModePerm)
   }
 
-	j, err := job.NewJob(args[0], &job.RuntimeConfig{
+	activeJob, err := job.NewJob(args[0], &job.RuntimeConfig{
     Cpus:          cpus,
     BridgeName:    runConfig.BridgeName,
     BridgeIface:   runConfig.HostNetwork,
@@ -178,7 +179,7 @@ func doRunCmd(cmd *cobra.Command, args []string) {
   }
 
   // Start the job with its various tasks
-  err = j.Start()
+  err = activeJob.Start()
   if err != nil {
     log.Errorf("Could not start job: %s", err)
     cleanup()
@@ -242,5 +243,12 @@ func setupInterruptHandler() {
 // Preserve the host environment
 func cleanup() {
   log.Info("Running clean up...")
+
+  if activeJob != nil {
+    activeJob.Cleanup()
+  }
+
   job.RevertEnvironment(runConfig.DryRun)
+
+  // TODO: Clean up bridge
 }
