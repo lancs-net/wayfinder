@@ -128,6 +128,7 @@ func (t *Task) UUID() string {
 // ActiveTaskRun contains information about a particular task's run.
 type ActiveTaskRun struct {
   Task     *Task
+  Runner   *run.Runner
   run      *run.Run
   CoreIds []int // the exact core numbers this task is using
   log      *log.Logger
@@ -163,6 +164,8 @@ func (atr *ActiveTaskRun) UUID() string {
 // Start the task's run
 func (atr *ActiveTaskRun) Start() (int, time.Duration, error) {
   var env []string
+  var err error
+
   for _, param := range atr.Task.Params {
     env = append(env, fmt.Sprintf("%s=%s", param.Name, param.Value))
   }
@@ -197,19 +200,17 @@ func (atr *ActiveTaskRun) Start() (int, time.Duration, error) {
     return 1, -1, fmt.Errorf("Run did not specify path or cmd: %s", atr.run.Name)
   }
 
-  runner, err := run.NewRunner(config, atr.bridge, atr.dryRun)
+  atr.Runner, err = run.NewRunner(config, atr.bridge, atr.dryRun)
   if err != nil {
     return 1, -1, err
   }
 
   atr.log.Infof("Starting run...")
-  exitCode, timeElapsed, err := runner.Run()
+  exitCode, timeElapsed, err := atr.Runner.Run()
+  atr.Runner.Destroy()
   if err != nil {
-    runner.Destroy()
     return 1, -1, fmt.Errorf("Could not start runner: %s", err)
   }
-
-  runner.Destroy()
 
   return exitCode, timeElapsed, nil
 }
