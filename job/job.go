@@ -532,7 +532,7 @@ func (j *Job) Start() error {
         if timeElapsed > 0 {
           log.Successf("Run %s finished in %s", activeTaskRun.UUID(), timeElapsed)
         } else {
-          log.Errorf("Run %s finished", activeTaskRun.UUID())
+          log.Errorf("Run %s finished with errors", activeTaskRun.UUID())
         }
         wg.Done() // We're done here
 
