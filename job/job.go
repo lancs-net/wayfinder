@@ -564,3 +564,19 @@ iterator:
 
   return nil
 }
+
+// Cleanup provides a way to deschedule all currently active tasks
+func (j *Job) Cleanup() {
+  // Iterate through active tasks
+  for _, atr := range tasksInFlight.All() {
+    // Skip cores which do not have a task
+    if atr == nil {
+      continue
+    }
+
+    err := atr.Runner.Destroy()
+    if err != nil {
+      log.Warnf("Could not destroy runner: %s", err)
+    }
+  }
+}
