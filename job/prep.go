@@ -172,6 +172,11 @@ func PrepareEnvironment(cpus []int, dryRun bool) error {
     return err
   }
 
+  err = setProcfsValue("/proc/sys/net/ipv4/ip_forward", "1", dryRun)
+  if err != nil {
+    return err
+  }
+
   err = setProcfsValue("/proc/sys/net/ipv4/ip_local_port_range", "1024   60999", dryRun)
   if err != nil {
     return err
