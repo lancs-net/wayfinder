@@ -154,6 +154,12 @@ func doRunCmd(cmd *cobra.Command, args []string) {
     os.MkdirAll(cacheDir, os.ModePerm)
   }
 
+  // Create the results dir
+  rersultsDir := path.Join(runConfig.WorkDir, "results")
+  if _, err := os.Stat(rersultsDir); os.IsNotExist(err) {
+    os.MkdirAll(rersultsDir, os.ModePerm)
+  }
+
 	activeJob, err := job.NewJob(args[0], &job.RuntimeConfig{
     Cpus:          cpus,
     BridgeName:    runConfig.BridgeName,
