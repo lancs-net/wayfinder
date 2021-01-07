@@ -1,0 +1,26 @@
+diff --git a/scripts/firecracker.py b/scripts/firecracker.py
+index d0b24071..b26f6cd7 100755
+--- a/scripts/firecracker.py
++++ b/scripts/firecracker.py
+@@ -237,7 +237,7 @@ def start_firecracker_with_no_api(firecracker_path, firecracker_config_json):
+     api_file.write(bytes(firecracker_config_json, 'utf-8'))
+     api_file.flush()
+     stty_save()
+-    return subprocess.Popen([firecracker_path, "--no-api", "--config-file", api_file.name],
++    return subprocess.Popen(['/usr/bin/time', '-f', 'Firecracker maxRSS: %M', firecracker_path, "--no-api", "--config-file", api_file.name],
+                            stdout=sys.stdout, stderr=subprocess.STDOUT), api_file.name
+ 
+ 
+diff --git a/scripts/run.py b/scripts/run.py
+index c7464bda..d9cdbeaf 100755
+--- a/scripts/run.py
++++ b/scripts/run.py
+@@ -272,7 +272,7 @@ def start_osv_qemu(options):
+ 
+         qemu_env['OSV_BRIDGE'] = options.bridge
+         qemu_path = options.qemu_path or ('qemu-system-%s' % options.arch)
+-        cmdline = [qemu_path] + args
++        cmdline = ['/usr/bin/time', '-f', 'QEMU maxRSS: %M', qemu_path] + args
+         if options.dry_run:
+             print(format_args(cmdline))
+         else:

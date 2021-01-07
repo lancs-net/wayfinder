@@ -1,0 +1,46 @@
+params:
+  - name: TEST
+    type: string
+    only: ["Hello"]
+
+inputs:
+  - source: osv-memusage.patch
+    destination: /root/osv-memusage.patch
+  - source: /etc/resolv.conf
+    destination: /etc/resolv.conf
+  - source: /etc/environment
+    destination: /etc/environment
+
+outputs:
+  - path: /results.txt
+
+runs:
+  - name: run
+    image: hlefeuvre/osv
+    cores: 1
+    devices:
+      - /dev/kvm
+      - /dev/net/tun
+    capabilities:
+      - CAP_NET_ADMIN
+    cmd:
+      |
+      set -xe
+      for env in $( cat /etc/environment ); do \
+        export $(echo $env | sed -e 's/"//g'); \
+      done
+
+      env
+
+      touch /results.txt
+
+      apt update && apt install -y time
+
+      cd  /root/osv/
+      git apply --ignore-space-change /root/osv-memusage.patch
+
+      script -c '/root/osv/scripts/run.py' -f /tmp/out
+      cat /tmp/out | grep "QEMU maxRSS: " >> /results.txt
+
+      script -c '/root/osv/scripts/firecracker.py' -f /tmp/out
+      cat /tmp/out | grep "Firecracker maxRSS: " >> /results.txt
