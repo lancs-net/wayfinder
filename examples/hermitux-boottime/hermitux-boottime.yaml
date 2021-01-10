@@ -1,0 +1,53 @@
+params:
+  - name: TEST
+    type: string
+    only: ["Hello"]
+
+inputs:
+  - source: hello.patch
+    destination: /root/hello.patch
+  - source: uhyve.patch
+    destination: /root/uhyve.patch
+  - source: /etc/resolv.conf
+    destination: /etc/resolv.conf
+  - source: /etc/environment
+    destination: /etc/environment
+
+outputs:
+  - path: /results.txt
+
+runs:
+  - name: run
+    image: olivierpierre/hermitux
+    cores: 1
+    devices:
+      - /dev/kvm
+      - /dev/net/tun
+    capabilities:
+      - CAP_NET_ADMIN
+    cmd:
+      |
+      set -xe
+      for env in $( cat /etc/environment ); do \
+        export $(echo $env | sed -e 's/"//g'); \
+      done
+
+      touch /results.txt
+
+      # patch uhyve to collect timestamps
+      cd /root/hermitux/hermitux-kernel
+      git apply /root/uhyve.patch --ignore-whitespace
+
+      # patch application to signal the end of the boot time (i/o port write)
+      cd /root/hermitux/apps/hello-world
+      git apply /root/hello.patch --ignore-whitespace
+
+      # rebuild
+      make -C /root/hermitux/
+      make -C /root/hermitux/apps/hello-world
+
+      # run it
+      cd /root/hermitux/apps/hello-world
+      script -c 'HERMIT_ISLE=uhyve HERMIT_TUX=1 ../../hermitux-kernel/prefix/bin/proxy \
+        ../../hermitux-kernel/prefix/x86_64-hermit/extra/tests/hermitux prog' -f /tmp/out
+      cat /tmp/out | grep "startup" >> /results.txt

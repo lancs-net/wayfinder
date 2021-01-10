@@ -1,0 +1,16 @@
+diff --git a/apps/hello-world/hello.c b/apps/hello-world/hello.c
+index e624986..9eb3efd 100644
+--- a/apps/hello-world/hello.c
++++ b/apps/hello-world/hello.c
+@@ -1,8 +1,11 @@
+ #include <stdio.h>
+ #include <stdlib.h>
++#include <sys/io.h>
+ 
+ int main(int argc, char **argv) {
+ 
++       outb(1, 0x534);
++
+        printf("hello, world!\n");
+        printf("argv[0] = %s\n", argv[0]);
+
