@@ -173,6 +173,18 @@ func (r *Runner) Init(in *[]Input, out *[]Output, dryRun bool) error {
     return fmt.Errorf("Could not extract image: %s", err)
   }
 
+  // Copy inputs into the rootfs
+  for _, input := range *in {
+    r.log.Debugf("Copying input into rootfs: %s", input.Source)
+    err := copy.Copy(
+      input.Source,
+      path.Join(r.rootfs, input.Destination),
+    )
+    if err != nil {
+      r.log.Warnf("Could not copy input: %s", err)
+    }
+  }
+
   // Copy outputs between runs
   for _, output := range *out {
     r.log.Debugf("Copying output into rootfs: %s", output.Path)
@@ -412,35 +424,6 @@ func (r *Runner) Init(in *[]Input, out *[]Output, dryRun bool) error {
         }),
       },
     },
-  }
-
-  // Attach each input as a mounted device to the container
-  for _, input := range *in {
-    // Parse the supplied flags
-    var flags int
-
-    // If no flags are specified, bind as RO
-    if len(input.Options) == 0 {
-      flags = unix.MS_BIND | unix.MS_RDONLY
-
-    // Otherwise, parse the list of options
-    } else {
-      flags, _, _, _ = parseMountOptions(input.Options)
-    }
-
-    // Determine the input source's absolute path
-    source, err := filepath.Abs(input.Source)
-    if err != nil {
-      r.log.Errorf("Cannot determine input source for %s: %s", input.Name, input.Source)
-      continue
-    }
-
-    config.Mounts = append(config.Mounts, &configs.Mount{
-      Device:      "bind",
-      Source:      source,
-      Destination: input.Destination,
-      Flags:       flags,
-    })
   }
 
   // Save the list of outputs for later
