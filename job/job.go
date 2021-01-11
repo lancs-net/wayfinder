@@ -146,7 +146,7 @@ func NewJob(filePath string, cfg *RuntimeConfig, dryRun bool) (*Job, error) {
     return nil, fmt.Errorf("Could not marshal JSON of tasks: %s", err)
   }
 
-  tasksJsonFile := path.Join(cfg.WorkDir, "/tasks.json")
+  tasksJsonFile := path.Join(cfg.WorkDir, "results", "tasks.json")
   log.Debugf("Writing tasks file %s...", tasksJsonFile)
   err = ioutil.WriteFile(tasksJsonFile, b, 0644)
   if err != nil {
