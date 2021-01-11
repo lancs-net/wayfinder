@@ -1,0 +1,47 @@
+params:
+  - name: TEST
+    type: string
+    only: ["Hello"]
+
+inputs:
+  - source: hello.patch
+    destination: /root/hello.patch
+  - source: solo5.patch
+    destination: /root/uhyve.patch
+  - source: /etc/resolv.conf
+    destination: /etc/resolv.conf
+  - source: /etc/environment
+    destination: /etc/environment
+
+outputs:
+  - path: /results.txt
+
+runs:
+  - name: run
+    image: hlefeuvre/rump-solo5
+    cores: 1
+    devices:
+      - /dev/kvm
+      - /dev/net/tun
+    capabilities:
+      - CAP_NET_ADMIN
+    cmd:
+      |
+      touch /results.txt
+
+      # patch solo5 to collect timestamps
+      cd /root/rumprun/solo5
+      git apply /root/solo5.patch --ignore-whitespace
+
+      # patch application to signal the end of the boot time (i/o port write)
+      cd /root/rumprun
+      git apply /root/hello.patch --ignore-whitespace
+
+      # rebuild
+      make
+      cd tests
+      . "/root/rumprun/./obj/config" && ./buildtests.sh -p solo5_hvt
+
+      # run it
+      script -c '. /root/rumprun/./obj/config && /root/rumprun/tests/runtests.sh hvt' -f /tmp/out
+      cat /tmp/out | grep "startup" >> /results.txt
