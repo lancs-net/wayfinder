@@ -196,6 +196,7 @@ func (r *Runner) Init(in *[]Input, out *[]Output, dryRun bool) error {
     return err
   }
 
+  // TODO: Need to populate this non-statically
   allowedDevices := specconv.AllowedDevices
   for _, device := range r.Config.Devices {
     switch device {
@@ -223,6 +224,34 @@ func (r *Runner) Init(in *[]Input, out *[]Output, dryRun bool) error {
           Type:        configs.CharDevice,
           Major:       10,
           Minor:       200,
+          Permissions: "rwm",
+          Allow:       true,
+        },
+      })
+    case "/dev/random":
+      allowedDevices = append(allowedDevices, &configs.Device{
+        Path:       "/dev/random",
+        FileMode:   0444,
+        Uid:        0,
+        Gid:        104,
+        DeviceRule: configs.DeviceRule{
+          Type:        configs.CharDevice,
+          Major:       1,
+          Minor:       8,
+          Permissions: "rwm",
+          Allow:       true,
+        },
+      })
+    case "/dev/urandom":
+      allowedDevices = append(allowedDevices, &configs.Device{
+        Path:       "/dev/urandom",
+        FileMode:   0444,
+        Uid:        0,
+        Gid:        104,
+        DeviceRule: configs.DeviceRule{
+          Type:        configs.CharDevice,
+          Major:       1,
+          Minor:       9,
           Permissions: "rwm",
           Allow:       true,
         },
