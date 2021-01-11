@@ -120,6 +120,10 @@ func NewJob(filePath string, cfg *RuntimeConfig, dryRun bool) (*Job, error) {
 
   log.Info("Calculating number of tasks...")
 
+  if len(job.Params) == 0 {
+    return nil, fmt.Errorf("You have not set any parameters")
+  }
+
   // Create all tasks for job, iterating over all possible parameter 
   // permutations
   tasks, err := job.tasks()
