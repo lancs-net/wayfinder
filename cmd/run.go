@@ -254,6 +254,15 @@ func cleanup() {
     activeJob.Cleanup()
   }
 
+  // Fix a weird libcontainer bug where if the directory still exists it thinks
+  // the container is still active.
+  libContainerCacheDir := path.Join(runConfig.WorkDir, ".cache", "libcontainer")
+  log.Debugf("Deleting %s...", libContainerCacheDir)
+  err := os.RemoveAll(libContainerCacheDir)
+  if err != nil {
+    log.Warnf("Could not delete container cache: %s", err)
+  }
+
   job.RevertEnvironment(runConfig.DryRun)
 
   // TODO: Clean up bridge
