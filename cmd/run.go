@@ -160,7 +160,7 @@ func doRunCmd(cmd *cobra.Command, args []string) {
     os.MkdirAll(rersultsDir, os.ModePerm)
   }
 
-	activeJob, err := job.NewJob(args[0], &job.RuntimeConfig{
+  activeJob, err := job.NewJob(args[0], &job.RuntimeConfig{
     Cpus:          cpus,
     BridgeName:    runConfig.BridgeName,
     BridgeIface:   runConfig.HostNetwork,
