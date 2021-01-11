@@ -67,6 +67,7 @@ type Job struct {
   scheduleGrace int
   dryRun        bool
   bridge       *run.Bridge
+  maxRetries    int
 }
 
 // RuntimeConfig contains details about the runtime of ukbench
@@ -78,6 +79,7 @@ type RuntimeConfig struct {
   ScheduleGrace   int
   WorkDir         string
   AllowOverride   bool
+  MaxRetries      int
 }
 
 // tasksInFlight represents the maximum tasks which are actively running
@@ -154,6 +156,7 @@ func NewJob(filePath string, cfg *RuntimeConfig, dryRun bool) (*Job, error) {
   job.scheduleGrace = cfg.ScheduleGrace
 
   job.dryRun = dryRun
+  job.maxRetries = cfg.MaxRetries
 
   // Iterate over all the tasks, check if the run is stasifyable, initialize the
   // task and add it to the waiting list.
@@ -460,6 +463,7 @@ func (j *Job) Start() error {
         cores,
         j.bridge,
         j.dryRun,
+        j.maxRetries,
       )
       if err != nil {
         log.Errorf("Could not initialize run for this task: %s", err)
@@ -506,34 +510,41 @@ func (j *Job) Start() error {
       // provided to it.
       wg.Add(1) // Update wait group for this thread to complete
       go func() {
-        returnCode, timeElapsed, err := activeTaskRun.Start()
-        if err != nil {
-          log.Errorf(
-            "Could not complete run: %s: %s",
-            activeTaskRun.UUID(),
-            err,
-          )
-        
-          // By cancelling all subsequent runs, the task will be removed from 
-          // scheduler.
-          task.(*Task).Cancel()
-        } else if returnCode != 0 {
-          log.Errorf(
-            "Could not complete run: %s: exited with return code %d",
-            activeTaskRun.UUID(),
-            returnCode,
-          )
+        var returnCode int
+        for i := 0; i < activeTaskRun.maxRetries + 1; i++ {
+          returnCode, timeElapsed, err := activeTaskRun.Start()
+          if err != nil {
+            log.Errorf(
+              "Could not complete run: %s: %s",
+              activeTaskRun.UUID(),
+              err,
+            )
+          } else if returnCode != 0 {
+            log.Errorf(
+              "Could not complete run: %s: exited with return code %d",
+              activeTaskRun.UUID(),
+              returnCode,
+            )
+          }
 
+          if timeElapsed > 0 {
+            log.Successf("Run %s finished in %s", activeTaskRun.UUID(), timeElapsed)
+            goto activeTaskDone
+          } else {
+            log.Errorf("Run %s finished with errors", activeTaskRun.UUID())
+            if i < activeTaskRun.maxRetries + 1 {
+              log.Info("Trying run again (%d/%d)", i + 1, activeTaskRun.maxRetries)
+            }
+          }
+        }
+
+        if err != nil || returnCode != 0 {
           // By cancelling all subsequent runs, the task will be removed from 
           // scheduler.
           task.(*Task).Cancel()
         }
 
-        if timeElapsed > 0 {
-          log.Successf("Run %s finished in %s", activeTaskRun.UUID(), timeElapsed)
-        } else {
-          log.Errorf("Run %s finished with errors", activeTaskRun.UUID())
-        }
+activeTaskDone:
         wg.Done() // We're done here
 
         // Remove utilized cores from this active task's run

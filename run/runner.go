@@ -82,6 +82,7 @@ type Run struct {
   Path           string `yaml:"path"`
   Capabilities []string
   exitCode       int
+  maxRetries     int
 }
 
 type Runner struct {

@@ -127,23 +127,25 @@ func (t *Task) UUID() string {
 
 // ActiveTaskRun contains information about a particular task's run.
 type ActiveTaskRun struct {
-  Task     *Task
-  Runner   *run.Runner
-  run      *run.Run
-  CoreIds []int // the exact core numbers this task is using
-  log      *log.Logger
-  workDir   string
-  dryRun    bool
-  bridge   *run.Bridge
+  Task       *Task
+  Runner     *run.Runner
+  run        *run.Run
+  CoreIds   []int // the exact core numbers this task is using
+  log        *log.Logger
+  workDir     string
+  dryRun      bool
+  bridge     *run.Bridge
+  maxRetries  int
 }
 
 // NewActiveTaskRun initializes the current task and the run step for the
 // the specified cores.
-func NewActiveTaskRun(task *Task, run run.Run, coreIds []int, bridge *run.Bridge, dryRun bool) (*ActiveTaskRun, error) {
+func NewActiveTaskRun(task *Task, run run.Run, coreIds []int, bridge *run.Bridge, dryRun bool, maxRetries int) (*ActiveTaskRun, error) {
   atr := &ActiveTaskRun{
-    Task:    task,
-    run:    &run,
-    CoreIds: coreIds,
+    Task:       task,
+    run:       &run,
+    CoreIds:    coreIds,
+    maxRetries: maxRetries,
   }
 
   atr.log = &log.Logger{

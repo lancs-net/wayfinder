@@ -54,6 +54,7 @@ type RunConfig struct {
   HostNetwork   string
   BridgeName    string
   BridgeSubnet  string
+  MaxRetries    int
 }
 
 var (
@@ -124,6 +125,13 @@ func init() {
     "172.88.0.1/16",
     "",
   )
+  runCmd.PersistentFlags().IntVarP(
+    &runConfig.MaxRetries,
+    "max-retries",
+    "r",
+    0,
+    "Maximum number of retries for a run.",
+  )
 }
 
 // doRunCmd 
@@ -168,6 +176,7 @@ func doRunCmd(cmd *cobra.Command, args []string) {
     ScheduleGrace: runConfig.ScheduleGrace,
     AllowOverride: runConfig.AllowOverride,
     WorkDir:       runConfig.WorkDir,
+    MaxRetries:    runConfig.MaxRetries,
   }, runConfig.DryRun)
 	if err != nil {
 		log.Fatalf("Could not read configuration: %s", err)
