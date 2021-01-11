@@ -1,0 +1,91 @@
+diff --git a/tools/proxy.c b/tools/proxy.c
+index 851faf1..d54bf3a 100644
+--- a/tools/proxy.c
++++ b/tools/proxy.c
+@@ -1062,8 +1062,12 @@ int socket_loop(int argc, char **argv)
+ 		return 1;
+ }
+ 
++#include <time.h>
++extern struct timespec main_entry_time;
++
+ int main(int argc, char **argv)
+ {
++        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &main_entry_time);
+ 	int ret;
+ 
+ 	ret = env_init(argv);
+diff --git a/tools/uhyve-syscalls.h b/tools/uhyve-syscalls.h
+index f4ade24..ae10755 100644
+--- a/tools/uhyve-syscalls.h
++++ b/tools/uhyve-syscalls.h
+@@ -52,7 +52,8 @@ typedef enum {
+ 	UHYVE_PORT_GETDENTS		= 0x529,
+ 	UHYVE_PORT_DUP2			= 0X530,
+ 	UHYVE_PORT_PIPE			= 0X531,
+-	UHYVE_PORT_NEWFSTATAT	= 0X532
++	UHYVE_PORT_NEWFSTATAT	= 0X532,
++	UHYVE_PORT_BOOT	= 0X534
+ } uhyve_syscall_t;
+ 
+ typedef struct {
+diff --git a/tools/uhyve.c b/tools/uhyve.c
+index 172fe57..d8ad1b0 100644
+--- a/tools/uhyve.c
++++ b/tools/uhyve.c
+@@ -63,6 +63,7 @@
+ #include <linux/kvm.h>
+ #include <asm/mman.h>
+ #include <sys/syscall.h>
++#include <time.h>
+ 
+ #include "uhyve.h"
+ #include "uhyve-cpu.h"
+@@ -868,6 +869,20 @@ static inline void check_network(void)
+ 	}
+ }
+ 
++struct timespec diff(struct timespec start, struct timespec end)
++{
++       struct timespec temp;
++       if ((end.tv_nsec-start.tv_nsec)<0) {
++               temp.tv_sec = end.tv_sec-start.tv_sec-1;
++               temp.tv_nsec = 1000000000+end.tv_nsec-start.tv_nsec;
++       } else {
++               temp.tv_sec = end.tv_sec-start.tv_sec;
++               temp.tv_nsec = end.tv_nsec-start.tv_nsec;
++       }
++       return temp;
++}
++
++struct timespec time1, time2, main_entry_time;
+ static int vcpu_loop(void)
+ {
+ 	int ret;
+@@ -881,6 +896,7 @@ static int vcpu_loop(void)
+ 	if (verbose)
+ 		puts("uhyve is entering vcpu_loop");
+ 
++       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &time1);
+ 	while (1) {
+ 		ret = ioctl(vcpufd, KVM_RUN, NULL);
+ 
+@@ -916,6 +932,18 @@ static int vcpu_loop(void)
+ 		case KVM_EXIT_IO:
+ 			//printf("port 0x%x\n", run->io.port);
+ 			switch (run->io.port) {
++                       case UHYVE_PORT_BOOT: {
++                               clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &time2);
++                               printf("uhyve startup: %lus, %luus (%lu ms)\n"
++				      "guest startup: %lus, %luus (%lu ms)\n",
++				      diff(main_entry_time, time1).tv_sec,
++				      diff(main_entry_time, time1).tv_nsec / 1000,
++				      diff(main_entry_time, time1).tv_nsec / 1000000,
++				      diff(time1, time2).tv_sec,
++				      diff(time1, time2).tv_nsec / 1000,
++				      diff(time1, time2).tv_nsec / 1000000);
++                               break;
++                               }
+ 			case UHYVE_PORT_WRITE: {
+ 				int ret;
+ 				unsigned data = *((unsigned*)((size_t)run+run->io.data_offset));

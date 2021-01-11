@@ -1,0 +1,60 @@
+params:
+  - name: TEST
+    type: string
+    only: ["Hello"]
+
+inputs:
+  - source: hello.patch
+    destination: /root/hello.patch
+  - source: scripts.patch
+    destination: /root/scripts.patch
+  - source: /etc/resolv.conf
+    destination: /etc/resolv.conf
+  - source: /etc/environment
+    destination: /etc/environment
+
+outputs:
+  - path: /results.txt
+
+runs:
+  - name: run
+    image: hlefeuvre/osv
+    cores: 1
+    devices:
+      - /dev/kvm
+      - /dev/net/tun
+    capabilities:
+      - CAP_NET_ADMIN
+    cmd:
+      |
+      set -xe
+      for env in $( cat /etc/environment ); do \
+        export $(echo $env | sed -e 's/"//g'); \
+      done
+
+      touch /results.txt
+
+      # patch OSv hello application to write to i/o port
+      cd  /root/osv/apps
+      git apply --ignore-space-change /root/hello.patch
+      cd  /root/osv/
+      ./scripts/build -j4 fs=rofs image=native-example
+
+      # patch OSv scripts to use instrumented VMMs 
+      git apply --ignore-space-change /root/scripts.patch
+
+      # QEMU statistics using instrumented VMM
+      echo "QEMU statistics: " > /results.txt
+      script -c '/root/osv/scripts/run.py --qemu-path \
+                 ../qemu/build/x86_64-softmmu/qemu-system-x86_64' -f /tmp/out
+      cat /tmp/out | grep "startup" >> /results.txt
+
+      # Create Firecracker FIFOs
+      mkfifo log.fifo
+      mkfifo metrics.fifo
+
+      # Firecracker statistics using instrumented VMM
+      echo "Firecracker statistics: " >> /results.txt
+      cat log.fifo > /tmp/out 2>&1 &
+      /root/osv/scripts/firecracker.py
+      cat /tmp/out | grep "boot-time" >> /results.txt

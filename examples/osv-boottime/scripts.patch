@@ -1,0 +1,20 @@
+diff --git a/scripts/firecracker.py b/scripts/firecracker.py
+index d0b24071..a23dc12e 100755
+--- a/scripts/firecracker.py
++++ b/scripts/firecracker.py
+@@ -178,6 +178,7 @@ def find_firecracker(dirname, arch):
+     if os.environ.get('FIRECRACKER_PATH'):
+         firecracker_path = os.environ.get('FIRECRACKER_PATH')
+ 
++    firecracker_path = "/root/firecracker"
+     # And offer to install if not found
+     firecracker_version = 'v0.23.0'
+     if not os.path.exists(firecracker_path):
+@@ -315,6 +316,7 @@ def main(options):
+ 
+         memory_in_mb = get_memory_size_in_mb(options)
+         client.configure_machine(options.vcpus, memory_in_mb)
++        client.configure_logging()
+         print_time("Configured VM")
+ 
+         client.add_disk(raw_disk_path)

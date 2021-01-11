@@ -1,0 +1,22 @@
+diff --git a/tests/hello/hello.c b/tests/hello/hello.c
+index 03e36e0..f394e2b 100644
+--- a/tests/hello/hello.c
++++ b/tests/hello/hello.c
+@@ -9,9 +9,17 @@
+ # error compiler wrapper fail
+ #endif
+ 
++static inline void
++outb(uint16_t port, uint8_t value)
++{
++
++        __asm__ __volatile__("outb %0, %1" :: "a"(value), "d"(port));
++}
++
+ int
+ rumprun_test(int argc, char *argv[])
+ {
++	outb(200, 0);
+ 	char *world = getenv("WORLD");
+ 	time_t now;
+ 

@@ -1,0 +1,38 @@
+params:
+  - name: TEST
+    type: string
+    only: ["Hello"]
+
+inputs:
+  - source: /etc/resolv.conf
+    destination: /etc/resolv.conf
+  - source: /etc/environment
+    destination: /etc/environment
+
+outputs:
+  - path: /results.txt
+
+runs:
+  - name: run
+    image: olivierpierre/hermitux
+    cores: 1
+    devices:
+      - /dev/kvm
+      - /dev/net/tun
+    capabilities:
+      - CAP_NET_ADMIN
+    cmd:
+      |
+      touch /results.txt
+
+      apt install -y time
+
+      # build
+      make -C /root/hermitux/apps/hello-world
+
+      # run it
+      cd /root/hermitux/apps/hello-world
+      script -c 'HERMIT_ISLE=uhyve HERMIT_TUX=1 /usr/bin/time -f "uhyve maxRSS: %M" \
+        ../../hermitux-kernel/prefix/bin/proxy \
+        ../../hermitux-kernel/prefix/x86_64-hermit/extra/tests/hermitux prog' -f /tmp/out
+      cat /tmp/out | grep "uhyve maxRSS" >> /results.txt

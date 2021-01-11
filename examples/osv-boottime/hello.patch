@@ -1,0 +1,18 @@
+diff --git a/native-example/hello.c b/native-example/hello.c
+index be1cf2b..1363cde 100644
+--- a/native-example/hello.c
++++ b/native-example/hello.c
+@@ -1,6 +1,13 @@
+ #include <stdio.h>
++#include <stdint.h>
++
++static inline void outb(uint16_t port, uint8_t v)
++{
++        __asm__ __volatile__("outb %0,%1" : : "a"(v), "dN"(port));
++}
+ 
+ int main(){
++       outb(1500, 1);
+        printf("Hello from C code\n");
+        return 0;
+ }
