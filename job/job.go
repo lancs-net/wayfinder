@@ -153,7 +153,7 @@ func NewJob(filePath string, cfg *RuntimeConfig, dryRun bool) (*Job, error) {
     return nil, fmt.Errorf("Could not write tasks file: %s", err)
   }
 
-  // Create a queue of size equal to the number of cores to eventually use
+  // Create a list with all the tasks waiting
   job.waitList = NewList(len(tasks))
 
   // Set the schedule grace time
