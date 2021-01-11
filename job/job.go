@@ -416,7 +416,7 @@ func (j *Job) Start() error {
       continue
     }
 
-    // Get the next job from the task's job queue
+    // Get the next task from the job's queue
     task, err := j.waitList.Get(i)
     if err != nil {
       i = 0 // jump back to task 0 in case we overflow
