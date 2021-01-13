@@ -40,7 +40,7 @@ runs:
 
       # patch solo5 platform
       kraft list pull plat/solo5
-      cd ../../plats/plat-solo5/
+      cd ../../plats/solo5/
       git checkout 51213c68c03208b547bfc23d02022de87cbbb696
       git apply /root/solo5.patch
       cd ../../apps/helloworld
@@ -60,7 +60,20 @@ runs:
 				-cpu host,migratable=no,+invtsc' -f /tmp/out
       cat /tmp/out | grep "startup" >> /results.txt
 
+      script -c '/usr/bin/time -f "QEMU maxRSS: %M" \
+                         qemu-system-x86_64 -enable-kvm \
+                                -nographic -nodefaults \
+				-no-reboot -no-user-config -m 2M -kernel \
+				build/helloworld_kvm-x86_64 \
+				-cpu host,migratable=no,+invtsc' -f /tmp/out
+      cat /tmp/out | grep "QEMU maxRSS: " >> /results.txt
+
       # solo5 statistics using instrumented VMM
       echo "solo5 statistics: " >> /results.txt
       script -c './build/solo5-hvt ./build/helloworld_solo5-x86_64' -f /tmp/out
       cat /tmp/out | grep "startup" >> /results.txt
+
+      script -c '/usr/bin/time -f "solo5 maxRSS: %M" \
+                    ./build/solo5-hvt ./build/helloworld_solo5-x86_64' -f /tmp/out
+      cat /tmp/out | grep "solo5 maxRSS: " >> /results.txt
+
