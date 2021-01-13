@@ -1,0 +1,44 @@
+prams:
+  - name: TEST
+    type: string
+    only: ["Hello"]
+
+inputs:
+  - source: hello.patch
+    destination: /root/hello.patch
+  - source: /etc/resolv.conf
+    destination: /etc/resolv.conf
+  - source: /etc/environment
+    destination: /etc/environment
+
+outputs:
+  - path: /results.txt
+
+runs:
+  - name: run
+    image: hlefeuvre/unikraft
+    cores: 1
+    devices:
+      - /dev/kvm
+      - /dev/net/tun
+    capabilities:
+      - CAP_NET_ADMIN
+    cmd:
+      |
+      set -xe
+      for env in $( cat /etc/environment ); do \
+        export $(echo $env | sed -e 's/"//g'); \
+      done
+
+      touch /results.txt
+
+      cd  /root/.unikraft/app/helloworld
+      git apply --ignore-space-change /root/hello.patch
+      make
+
+      # QEMU statistics using instrumented VMM
+      script -c 'qemu-system-x86_64 -enable-kvm -nographic -nodefaults \
+				-no-reboot -no-user-config -m 2M -kernel \
+				build/helloworld_kvm-x86_64 \
+				-cpu host,migratable=no,+invtsc' -f /tmp/out
+      cat /tmp/out | grep "startup" >> /results.txt
