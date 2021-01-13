@@ -45,8 +45,7 @@ runs:
 
       # QEMU statistics using instrumented VMM
       echo "QEMU statistics: " > /results.txt
-      script -c '/root/osv/scripts/run.py --qemu-path \
-                 ../qemu/build/x86_64-softmmu/qemu-system-x86_64' -f /tmp/out
+      script -c '../qemu/build/x86_64-softmmu/qemu-system-x86_64 -m 40M -device virtio-blk-pci,id=blk0,drive=hd0,scsi=off,bootindex=0 -drive file=/root/osv/build/last/usr.img,if=none,id=hd0,cache=none,aio=native -net none -enable-kvm -cpu host,+x2apic -chardev stdio,mux=on,id=stdio,signal=off -mon chardev=stdio,mode=readline -device isa-serial,chardev=stdio' -f /tmp/out
       cat /tmp/out | grep "startup" >> /results.txt
 
       # Create Firecracker FIFOs

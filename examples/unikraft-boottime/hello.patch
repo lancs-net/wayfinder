@@ -1,3 +1,15 @@
+diff --git a/Makefile b/Makefile
+index 5426bae..5f3cc4f 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,6 +1,6 @@
+ UK_ROOT ?= $(PWD)/../../unikraft
+ UK_LIBS ?= $(PWD)/../../libs
+-LIBS :=
++LIBS := $(PWD)/../../plats/plat-solo5
+ 
+ all:
+        @$(MAKE) -C $(UK_ROOT) A=$(PWD) L=$(LIBS)
 diff --git a/main.c b/main.c
 index 0a14cb0..6c0b899 100644
 --- a/main.c
