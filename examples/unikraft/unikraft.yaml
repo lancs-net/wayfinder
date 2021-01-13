@@ -34,6 +34,8 @@ runs:
 
       touch /results.txt
 
+      apt update && apt install -y time
+
       # patch helloworld application
       cd  /root/.unikraft/app/helloworld
       git apply --ignore-space-change /root/hello.patch

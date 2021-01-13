@@ -8,6 +8,8 @@ inputs:
     destination: /root/hello.patch
   - source: scripts.patch
     destination: /root/scripts.patch
+  - source: memusage.patch
+    destination: /root/memusage.patch
   - source: /etc/resolv.conf
     destination: /etc/resolv.conf
   - source: /etc/environment
@@ -32,6 +34,8 @@ runs:
         export $(echo $env | sed -e 's/"//g'); \
       done
 
+      apt update && apt install -y time
+
       touch /results.txt
 
       # patch OSv hello application to write to i/o port
@@ -48,6 +52,9 @@ runs:
       script -c '../qemu/build/x86_64-softmmu/qemu-system-x86_64 -m 40M -device virtio-blk-pci,id=blk0,drive=hd0,scsi=off,bootindex=0 -drive file=/root/osv/build/last/usr.img,if=none,id=hd0,cache=none,aio=native -net none -enable-kvm -cpu host,+x2apic -chardev stdio,mux=on,id=stdio,signal=off -mon chardev=stdio,mode=readline -device isa-serial,chardev=stdio' -f /tmp/out
       cat /tmp/out | grep "startup" >> /results.txt
 
+      script -c '/usr/bin/time -f "QEMU maxRSS: %M" ../qemu/build/x86_64-softmmu/qemu-system-x86_64 -m 40M -device virtio-blk-pci,id=blk0,drive=hd0,scsi=off,bootindex=0 -drive file=/root/osv/build/last/usr.img,if=none,id=hd0,cache=none,aio=native -net none -enable-kvm -cpu host,+x2apic -chardev stdio,mux=on,id=stdio,signal=off -mon chardev=stdio,mode=readline -device isa-serial,chardev=stdio' -f /tmp/out
+      cat /tmp/out | grep "QEMU maxRSS: " >> /results.txt
+
       # Create Firecracker FIFOs
       mkfifo log.fifo
       mkfifo metrics.fifo
@@ -57,3 +64,7 @@ runs:
       cat log.fifo > /tmp/out 2>&1 &
       /root/osv/scripts/firecracker.py
       cat /tmp/out | grep "boot-time" >> /results.txt
+
+      git apply --ignore-space-change /root/memusage.patch
+      script -c '/root/osv/scripts/firecracker.py' -f /tmp/out
+      cat /tmp/out | grep "Firecracker maxRSS: " >> /results.txt
