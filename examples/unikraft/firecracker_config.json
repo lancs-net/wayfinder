@@ -1,0 +1,26 @@
+{
+  "boot-source": {
+    "kernel_image_path": "/root/.unikraft/apps/helloworld/build/helloworld_kvmfc-x86_64",
+    "boot_args": ""
+  },
+  "drives": [
+    {
+      "drive_id": "rootfs",
+      "path_on_host": "/tmp/disk.img",
+      "is_root_device": true,
+      "is_read_only": false
+    }
+  ],
+  "logger": {
+    "log_fifo": "log.fifo",
+    "metrics_fifo": "metrics.fifo",
+    "level": "Info",
+    "show_level": true,
+    "show_log_origin": true
+  },
+  "machine-config": {
+    "vcpu_count": 1,
+    "mem_size_mib": 4,
+    "ht_enabled": false
+  }
+}

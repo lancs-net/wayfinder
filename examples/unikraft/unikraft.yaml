@@ -4,6 +4,12 @@ prams:
     only: ["Hello"]
 
 inputs:
+  - source: firecracker_config.json
+    destination: /root/firecracker_config.json
+  - source: firecracker_uk.config
+    destination: /root/firecracker_uk.config
+  - source: firecracker.patch
+    destination: /root/firecracker.patch
   - source: hello.patch
     destination: /root/hello.patch
   - source: solo5.patch
@@ -34,7 +40,7 @@ runs:
 
       touch /results.txt
 
-      apt update && apt install -y time
+      apt update && apt install -y time qemu-utils
 
       # patch helloworld application
       cd  /root/.unikraft/app/helloworld
@@ -68,7 +74,7 @@ runs:
 				-no-reboot -no-user-config -m 2M -kernel \
 				build/helloworld_kvm-x86_64 \
 				-cpu host,migratable=no,+invtsc' -f /tmp/out
-      cat /tmp/out | grep "QEMU maxRSS: " >> /results.txt
+      cat /tmp/out | grep "maxRSS: " >> /results.txt
 
       # solo5 statistics using instrumented VMM
       echo "solo5 statistics: " >> /results.txt
@@ -77,5 +83,33 @@ runs:
 
       script -c '/usr/bin/time -f "solo5 maxRSS: %M" \
                     ./build/solo5-hvt ./build/helloworld_solo5-x86_64' -f /tmp/out
-      cat /tmp/out | grep "solo5 maxRSS: " >> /results.txt
+      cat /tmp/out | grep "maxRSS: " >> /results.txt
 
+      # create firecracker disk image (not used, but seems to be required)
+      qemu-img create -f raw /tmp/disk.img 1K
+
+      # Create Firecracker FIFOs
+      mkfifo /root/logs.fifo
+      mkfifo /root/metrics.fifo
+
+      # Add firecracker patch to Unikraft (not merged yet)
+      cd ../../unikraft
+      git checkout a4cf6565
+      git apply /root/firecracker.patch
+      cd ../apps/helloworld
+
+      # enable firecracker and rebuild
+      rm .config
+      mv /root/firecracker_uk.config .config
+      make properclean && make
+
+      echo "firecracker statistics: " >> /results.txt
+      cat log.fifo > /tmp/out 2>&1 &
+      firecracker --config-file /root/firecracker_config.json --api-sock /tmp/firecracker.socket
+      cat /tmp/out | grep "boot-time" >> /results.txt
+      rm /tmp/firecracker.socket
+
+      script -c '/usr/bin/time -f "firecracker maxRSS: %M" \
+                    firecracker --config-file /root/firecracker_config.json \
+				--api-sock /tmp/firecracker.socket' -f /tmp/out
+      cat /tmp/out | grep "maxRSS: " >> /results.txt
