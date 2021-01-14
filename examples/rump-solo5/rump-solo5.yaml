@@ -7,7 +7,9 @@ inputs:
   - source: hello.patch
     destination: /root/hello.patch
   - source: solo5.patch
-    destination: /root/uhyve.patch
+    destination: /root/solo5.patch
+  - source: memusage.patch
+    destination: /root/memusage.patch
   - source: /etc/resolv.conf
     destination: /etc/resolv.conf
   - source: /etc/environment
@@ -29,6 +31,8 @@ runs:
       |
       touch /results.txt
 
+      apt install -y time
+
       # patch solo5 to collect timestamps
       cd /root/rumprun/solo5
       git apply /root/solo5.patch --ignore-whitespace
@@ -45,3 +49,9 @@ runs:
       # run it
       script -c '. /root/rumprun/./obj/config && /root/rumprun/tests/runtests.sh hvt' -f /tmp/out
       cat /tmp/out | grep "startup" >> /results.txt
+
+      # now patch the runner to retrieve max RSS
+      git apply /root/memusage.patch --ignore-whitespace
+      script -c '. /root/rumprun/./obj/config && /root/rumprun/tests/runtests.sh hvt' -f /tmp/out
+      # first occurence only (other lines are not for hello world)
+      cat /tmp/out | grep "solo5 maxRSS" | head -n 1 >> /results.txt

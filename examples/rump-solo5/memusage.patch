@@ -1,0 +1,21 @@
+diff --git a/tests/runtests.sh b/tests/runtests.sh
+index be39bb1..30c2a38 100755
+--- a/tests/runtests.sh
++++ b/tests/runtests.sh
+@@ -102,13 +102,15 @@ runguest ()
+                cookie=$(${SOLO5_SPT} --block:rootfs=${img1} --net:tap=tap100 ${testprog} '{"cmdline":"testprog __test","blk":{"source":"etfs","path":"ld0d","fstype":"blk"}}')
+                ;;
+        hvt)
+-               cookie=$(${SOLO5_HVT} --block:rootfs=${img1} --net:tap=tap100 ${testprog} '{"cmdline":"testprog __test","blk":{"source":"etfs","path":"ld0d","fstype":"blk"}}')
++               cookie=$(/usr/bin/time -f "solo5 maxRSS: %M" ${SOLO5_HVT} --block:rootfs=${img1} --net:tap=tap100 ${testprog} '{"cmdline":"testprog __test","blk":{"source":"etfs","path":"ld0d","fstype":"blk"}}')
+                ;;
+        *)
+                cookie=$(${RUMPRUN} ${OPT_SUDO} ${STACK} -b ${img1} ${testprog} __test)
+                ;;
+        esac
+ 
++       echo "${cookie}" | grep "solo5 maxRSS"
++
+        if [ $? -ne 0 -o -z "${cookie}" ]; then
+                TEST_RESULT=ERROR
+                TEST_ECODE=-2
