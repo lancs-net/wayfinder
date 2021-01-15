@@ -1,0 +1,54 @@
+params:
+  - name: TEST
+    type: string
+    only: ["Hello"]
+
+inputs:
+  - source: /etc/resolv.conf
+    destination: /etc/resolv.conf
+  - source: /etc/environment
+    destination: /etc/environment
+
+outputs:
+  - path: /results.txt
+
+runs:
+  - name: run
+    image: hlefeuvre/lupine
+    cores: 1
+    devices:
+      - /dev/kvm
+      - /dev/net/tun
+    capabilities:
+      - CAP_NET_ADMIN
+    cmd:
+      |
+      set -xe
+      for env in $( cat /etc/environment ); do \
+        export $(echo $env | sed -e 's/"//g'); \
+      done
+
+      apt update && apt install -y time
+
+      touch /results.txt
+
+      # Create Firecracker FIFOs
+      mkfifo /tmp/logs.fifo
+      mkfifo /tmp/metrics.fifo
+
+      cp /tmp/lupine-portwrite.ext2 /tmp/lupine-portwrite.ext2.bak
+
+      rm /tmp/socket.sock
+
+      # Firecracker statistics using instrumented VMM
+      echo "Firecracker statistics: " >> /results.txt
+      cat log.fifo > /tmp/out 2>&1 &
+      ./firecracker-0.21.0-inst --config-file ./firecracker.json --api-sock /tmp/socket.sock
+      cat /tmp/out | grep "boot-time" >> /results.txt
+
+      rm /tmp/socket.sock
+      rm /tmp/lupine-portwrite.ext2
+      cp /tmp/lupine-portwrite.ext2.bak /tmp/lupine-portwrite.ext2
+
+      script -c '/usr/bin/time -f "firecracker maxRSS: %M" ./firecracker-0.21.0-inst --config-file ./firecracker.json --api-sock /tmp/socket.sock' -f /tmp/out
+      cat /tmp/out | grep "Firecracker maxRSS: " >> /results.txt
