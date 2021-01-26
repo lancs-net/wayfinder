@@ -1,0 +1,42 @@
+FROM debian:stretch AS wrk
+
+RUN set -xe; \
+    apt-get update; \
+    apt-get install -y \
+      build-essential \
+      git; \
+    git clone https://github.com/wg/wrk.git /wrk; \
+    cd /wrk; \
+    make
+
+FROM unikraft/kraft:staging AS kraft
+
+ARG UK_KRAFT_GITHUB_TOKEN=
+ENV KRAFTRC=/usr/src/unikraft/.kraftrc
+
+COPY --from=wrk /wrk/wrk /usr/local/bin/wrk
+
+RUN set -xe; \
+    apt-get update; \
+    apt-get install -y \
+      jq \
+      iperf3 \
+      procps \
+      bridge-utils \
+      net-tools \
+      bsdcpio; \
+    echo "" > $KRAFTRC; \
+    kraft list add https://github.com/lancs-net/unikraft.git; \
+    kraft list add https://github.com/lancs-net/lib-lwip.git; \
+    kraft list add https://github.com/unikraft/lib-pthread-embedded.git; \
+    kraft list add https://github.com/unikraft/lib-newlib.git; \
+    kraft list add https://github.com/unikraft/lib-nginx.git; \
+    kraft list add https://github.com/unikraft/app-nginx.git; \
+    kraft list update; \
+    kraft list pull unikraft@dev-stdout; \
+    kraft list pull lib/pthread-embedded@staging; \
+    kraft list pull lib/newlib@staging; \
+    kraft list pull lib/lwip@staging; \
+    kraft list pull lib/nginx@staging; \
+    kraft list pull --no-deps app/nginx; \
+    unset UK_KRAFT_GITHUB_TOKEN
