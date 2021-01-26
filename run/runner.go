@@ -443,7 +443,8 @@ func (r *Runner) Init(in *[]Input, out *[]Output, dryRun bool) error {
       return fmt.Errorf("Could not create temporary cmd file: %s", err)
     }
 
-    _, err = f.WriteString("#!/usr/bin/env sh\n")
+    // TODO: bash may not exist in the environment
+    _, err = f.WriteString("#!/usr/bin/env bash\n")
     if err != nil {
       return fmt.Errorf("Could not write to temporary cmd file: %s", err)
     }
