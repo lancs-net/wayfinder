@@ -5,7 +5,7 @@ go 1.14
 require (
 	github.com/containerd/containerd v1.4.3
 	github.com/containerd/continuity v0.0.0-20201208142359-180525291bb7 // indirect
-	github.com/genuinetools/netns v0.5.3
+	github.com/lancs-net/netns v0.5.4
 	github.com/google/go-containerregistry v0.3.0
 	github.com/moby/moby v20.10.1+incompatible
 	github.com/moby/sys/mount v0.2.0 // indirect
