@@ -1,0 +1,14 @@
+Running 10s test @ http://172.13.32.2:80/payload.txt
+  30 threads and 30 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   425.28ms  598.51ms   1.99s    80.02%
+    Req/Sec   413.28    424.32     1.01k    71.28%
+  Latency Distribution
+     50%  143.00us
+     75%  823.06ms
+     90%    1.46s 
+     99%    1.93s 
+  14205 requests in 10.01s, 11.43MB read
+  Socket errors: connect 0, read 21, write 0, timeout 0
+Requests/sec:   1418.41
+Transfer/sec:      1.14MB
