@@ -33,8 +33,8 @@ package run
 import (
 	"net"
 
-	"github.com/genuinetools/netns/bridge"
-	"github.com/genuinetools/netns/network"
+	"github.com/lancs-net/netns/bridge"
+	"github.com/lancs-net/netns/network"
 	"github.com/opencontainers/runtime-spec/specs-go"
 
   "github.com/lancs-net/ukbench/log"
