@@ -39,6 +39,7 @@ import (
   "path"
   "strconv"
   "io/ioutil"
+  "encoding/json"
 
   "gopkg.in/yaml.v2"
   "github.com/novln/docker-parser"
