@@ -45,3 +45,4 @@ RUN set -xe; \
 
 COPY . /go/src/github.com/${ORG}/${BIN}
 WORKDIR /go/src/github.com/${ORG}/${BIN}
+ENV GOROOT=/usr/local/go
