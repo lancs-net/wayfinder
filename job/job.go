@@ -537,7 +537,7 @@ func (j *Job) Start() error {
           } else {
             log.Errorf("Run %s finished with errors", activeTaskRun.UUID())
             if i < activeTaskRun.maxRetries + 1 {
-              log.Info("Trying run again (%d/%d)", i + 1, activeTaskRun.maxRetries)
+              log.Infof("Trying run again (%d/%d)", i + 1, activeTaskRun.maxRetries)
             }
           }
         }
