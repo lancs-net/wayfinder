@@ -36,7 +36,6 @@ import (
   "time"
   "path"
   "strings"
-  "path/filepath"
 
   "golang.org/x/sys/unix"
   "github.com/otiai10/copy"
