@@ -206,6 +206,11 @@ func PrepareEnvironment(cpus []int, dryRun bool) error {
     if err != nil {
       log.Warnf("Cannot set scaling governor: %s", err)
     }
+
+    // err = setProcfsValue(fmt.Sprintf("/sys/devices/system/cpu/cpu%d/online", c), "0", dryRun)
+    // if err != nil {
+    //   log.Warnf("Cannot set scaling governor: %s", err)
+    // }
   }
   
   // Disable Intel Turbo mode
