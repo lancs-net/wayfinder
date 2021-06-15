@@ -173,11 +173,12 @@ func doRunCmd(cmd *cobra.Command, args []string) {
     BridgeName:    runConfig.BridgeName,
     BridgeIface:   runConfig.HostNetwork,
     BridgeSubnet:  runConfig.BridgeSubnet,
+    DryRun:        runConfig.DryRun,
     ScheduleGrace: runConfig.ScheduleGrace,
     AllowOverride: runConfig.AllowOverride,
     WorkDir:       runConfig.WorkDir,
     MaxRetries:    runConfig.MaxRetries,
-  }, runConfig.DryRun)
+  })
 	if err != nil {
 		log.Fatalf("Could not read configuration: %s", err)
 		os.Exit(1)

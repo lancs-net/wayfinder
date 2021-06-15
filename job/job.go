@@ -80,6 +80,7 @@ type RuntimeConfig struct {
   BridgeName      string
   BridgeIface     string
   BridgeSubnet    string
+  DryRun          bool
   ScheduleGrace   int
   WorkDir         string
   AllowOverride   bool
@@ -92,7 +93,7 @@ type RuntimeConfig struct {
 var tasksInFlight *coremap.CoreMap
 
 // NewJob prepares a job yaml file
-func NewJob(filePath string, cfg *RuntimeConfig, dryRun bool) (*Job, error) {
+func NewJob(filePath string, cfg *RuntimeConfig) (*Job, error) {
   // Check if the path is set
   if len(filePath) == 0 {
     return nil, fmt.Errorf("File path cannot be empty")
@@ -163,7 +164,7 @@ func NewJob(filePath string, cfg *RuntimeConfig, dryRun bool) (*Job, error) {
   // Set the schedule grace time
   job.scheduleGrace = cfg.ScheduleGrace
 
-  job.dryRun = dryRun
+  job.dryRun = cfg.DryRun
   job.maxRetries = cfg.MaxRetries
 
   // Iterate over all the tasks, check if the run is stasifyable, initialize the
@@ -185,7 +186,7 @@ func NewJob(filePath string, cfg *RuntimeConfig, dryRun bool) (*Job, error) {
       }
     }
 
-    err := task.Init(cfg.WorkDir, cfg.AllowOverride, &job.Runs, dryRun)
+    err := task.Init(cfg.WorkDir, cfg.AllowOverride, &job.Runs, cfg.DryRun)
     if err != nil {
       log.Errorf("Could not initialize task: %s", err)
     } else {
@@ -205,7 +206,7 @@ func NewJob(filePath string, cfg *RuntimeConfig, dryRun bool) (*Job, error) {
     Subnet:    cfg.BridgeSubnet,
     CacheDir:  path.Join(cfg.WorkDir, ".cache"),
   }
-  err = job.bridge.Init(dryRun)
+  err = job.bridge.Init(cfg.DryRun)
   if err != nil {
     return nil, fmt.Errorf("Could not create bridge: %s", err)
   }
