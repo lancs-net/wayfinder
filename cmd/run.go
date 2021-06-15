@@ -41,7 +41,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/lancs-net/ukbench/log"
+	"github.com/lancs-net/ukbench/internal/log"
 	"github.com/lancs-net/ukbench/job"
 )
 

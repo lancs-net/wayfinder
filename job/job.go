@@ -44,7 +44,7 @@ import (
   "gopkg.in/yaml.v2"
   "github.com/novln/docker-parser"
 
-  "github.com/lancs-net/ukbench/log"
+  "github.com/lancs-net/ukbench/internal/log"
   "github.com/lancs-net/ukbench/run"
 
   "github.com/lancs-net/ukbench/internal/list"

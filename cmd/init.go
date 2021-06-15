@@ -37,7 +37,7 @@ import (
   "github.com/opencontainers/runc/libcontainer"
   _ "github.com/opencontainers/runc/libcontainer/nsenter"
 
-  "github.com/lancs-net/ukbench/log"
+  "github.com/lancs-net/ukbench/internal/log"
 )
 
 var runcInitCmd = &cobra.Command{

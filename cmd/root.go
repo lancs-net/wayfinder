@@ -34,7 +34,7 @@ import (
 	"os"
 	"fmt"
 
-  "github.com/lancs-net/ukbench/log"
+  "github.com/lancs-net/ukbench/internal/log"
 
 	"github.com/spf13/cobra"
 )

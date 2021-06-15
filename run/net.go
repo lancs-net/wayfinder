@@ -37,7 +37,7 @@ import (
 	"github.com/lancs-net/netns/network"
 	"github.com/opencontainers/runtime-spec/specs-go"
 
-  "github.com/lancs-net/ukbench/log"
+  "github.com/lancs-net/ukbench/internal/log"
 )
 
 type Bridge struct {

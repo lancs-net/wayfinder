@@ -39,7 +39,7 @@ import (
   "strings"
 	"crypto/md5"
 
-  "github.com/lancs-net/ukbench/log"
+  "github.com/lancs-net/ukbench/internal/log"
   "github.com/lancs-net/ukbench/run"
 )
 

@@ -45,7 +45,7 @@ import (
   "github.com/opencontainers/runc/libcontainer/specconv"
   "github.com/opencontainers/runc/libcontainer/configs"
 
-  "github.com/lancs-net/ukbench/log"
+  "github.com/lancs-net/ukbench/internal/log"
 )
 
 var (
