@@ -46,6 +46,8 @@ import (
 
   "github.com/lancs-net/ukbench/log"
   "github.com/lancs-net/ukbench/run"
+
+  "github.com/lancs-net/ukbench/internal/coremap"
 )
 
 type JobParam struct {
@@ -86,7 +88,7 @@ type RuntimeConfig struct {
 // tasksInFlight represents the maximum tasks which are actively running
 // concurrently.  When a tasks is completed, it will leave this list and a
 // new task can join.
-var tasksInFlight *CoreMap
+var tasksInFlight *coremap.CoreMap
 
 // NewJob prepares a job yaml file
 func NewJob(filePath string, cfg *RuntimeConfig, dryRun bool) (*Job, error) {
@@ -193,7 +195,7 @@ func NewJob(filePath string, cfg *RuntimeConfig, dryRun bool) (*Job, error) {
   log.Infof("There are total %d tasks", job.waitList.Len())
 
   // Prepare a map of cores to hold onto a particular task's run
-  tasksInFlight = NewCoreMap(cfg.Cpus)
+  tasksInFlight = coremap.NewCoreMap(cfg.Cpus)
 
   // Set up the bridge
   job.bridge = &run.Bridge{
@@ -446,7 +448,7 @@ func (j *Job) Start() error {
       tasksInFlight.RLock()
       for _, atr := range tasksInFlight.All() {
         if atr != nil {
-          if atr.Task.UUID() == task.(*Task).UUID() {
+          if (atr.(*ActiveTaskRun)).Task.UUID() == task.(*Task).UUID() {
             tasksInFlight.RUnlock()
             goto iterator
           }
@@ -590,7 +592,7 @@ func (j *Job) Cleanup() {
       continue
     }
 
-    err := atr.Runner.Destroy()
+    err := atr.(*ActiveTaskRun).Runner.Destroy()
     if err != nil {
       log.Warnf("Could not destroy runner: %s", err)
     }
