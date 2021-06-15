@@ -47,6 +47,7 @@ import (
   "github.com/lancs-net/ukbench/log"
   "github.com/lancs-net/ukbench/run"
 
+  "github.com/lancs-net/ukbench/internal/list"
   "github.com/lancs-net/ukbench/internal/coremap"
 )
 
@@ -66,7 +67,7 @@ type Job struct {
   Inputs        []run.Input  `yaml:"inputs"`
   Outputs       []run.Output `yaml:"outputs"`
   Runs          []run.Run    `yaml:"runs"`
-  waitList     *List
+  waitList     *list.List
   scheduleGrace int
   dryRun        bool
   bridge       *run.Bridge
@@ -157,7 +158,7 @@ func NewJob(filePath string, cfg *RuntimeConfig, dryRun bool) (*Job, error) {
   }
 
   // Create a list with all the tasks waiting
-  job.waitList = NewList(len(tasks))
+  job.waitList = list.NewList(len(tasks))
 
   // Set the schedule grace time
   job.scheduleGrace = cfg.ScheduleGrace
