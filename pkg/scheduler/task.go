@@ -1,4 +1,4 @@
-package runtime
+package scheduler
 // SPDX-License-Identifier: BSD-3-Clause
 //
 // Authors: Alexander Jung <a.jung@lancs.ac.uk>
@@ -38,11 +38,12 @@ import (
   "path"
   "strings"
 
+  "github.com/lancs-net/ukbench/spec"
+
+  "github.com/lancs-net/ukbench/pkg/runner"
+
   "github.com/lancs-net/ukbench/internal/log"
   "github.com/lancs-net/ukbench/internal/queue"
-
-  "github.com/lancs-net/ukbench/run"
-  "github.com/lancs-net/ukbench/spec"
 )
 
 // Task is the specific iterated configuration
@@ -55,13 +56,13 @@ type Task struct {
 }
 
 // Init prepare the task 
-func NewTask(perm *spec.JobPermutation, workDir string, allowOverride bool, runs *[]spec.Run, dryRun bool) (*Task, error) {
+func NewTask(perm *spec.JobPermutation, workDir string, allowOverride bool, dryRun bool) (*Task, error) {
   t := &Task{
     permutation: perm,
   }
 
   // Create a queue of runs for this particular task
-  t.runs = queue.NewQueue(len(*runs))
+  t.runs = queue.NewQueue(len(*perm.Runs))
 
   // Set the working directory
   t.resultsDir = path.Join(workDir, "results", t.permutation.UUID())
@@ -92,7 +93,7 @@ func NewTask(perm *spec.JobPermutation, workDir string, allowOverride bool, runs
   }
 
   // Add the runs in-order
-  for _, run := range *runs {
+  for _, run := range *perm.Runs {
     t.runs.Enqueue(run)
   }
 
@@ -116,13 +117,12 @@ type ActiveTaskRun struct {
   log        *log.Logger
   workDir     string
   dryRun      bool
-  bridge     *runner.Bridge
   maxRetries  int
 }
 
 // NewActiveTaskRun initializes the current task and the run step for the
 // the specified cores.
-func NewActiveTaskRun(task *Task, run spec.Run, coreIds []int, bridge *runner.Bridge, dryRun bool, maxRetries int) (*ActiveTaskRun, error) {
+func NewActiveTaskRun(task *Task, run spec.Run, coreIds []int, dryRun bool, maxRetries int) (*ActiveTaskRun, error) {
   atr := &ActiveTaskRun{
     Task:       task,
     run:       &run,
@@ -135,8 +135,6 @@ func NewActiveTaskRun(task *Task, run spec.Run, coreIds []int, bridge *runner.Br
     Prefix:   atr.UUID(),
   }
 
-  atr.bridge = bridge
-
   return atr, nil
 }
 
@@ -146,7 +144,7 @@ func (atr *ActiveTaskRun) UUID() string {
 }
 
 // Start the task's run
-func (atr *ActiveTaskRun) Start() (int, time.Duration, error) {
+func (atr *ActiveTaskRun) Start(bridge *runner.Bridge) (int, time.Duration, error) {
   var env []string
   var err error
 
@@ -184,7 +182,7 @@ func (atr *ActiveTaskRun) Start() (int, time.Duration, error) {
     return 1, -1, fmt.Errorf("Run did not specify path or cmd: %s", atr.run.Name)
   }
 
-  atr.Runner, err = runner.NewRunner(config, atr.bridge, atr.dryRun)
+  atr.Runner, err = runner.NewRunner(config, bridge, atr.dryRun)
   if err != nil {
     return 1, -1, err
   }

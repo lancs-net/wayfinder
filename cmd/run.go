@@ -122,6 +122,13 @@ func init() {
     0,
     "Maximum number of retries for a run.",
   )
+  runCmd.PersistentFlags().StringVarP(
+    &runConfig.Scheduler,
+    "scheduler",
+    "S",
+    "simple",
+    "Parameter permutation scheduler",
+  )
 }
 
 // doRunCmd 

@@ -1,9 +1,9 @@
-package spec
+package scheduler
 // SPDX-License-Identifier: BSD-3-Clause
 //
 // Authors: Alexander Jung <a.jung@lancs.ac.uk>
 //
-// Copyright (c) 2021, Lancaster University.  All rights reserved.
+// Copyright (c) 2020, Lancaster University.  All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
@@ -30,15 +30,23 @@ package spec
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-type Runtime struct {
-  CpuSets       string  `yaml:"cpu_sets"`
-  DryRun        bool    `yaml:"dry_run"`
-  ScheduleGrace int     `yaml:"schedule_grace"`
-  WorkDir       string  `yaml:"workdir"`
-  AllowOverride bool    `yaml:"allow_io_override"`
-  HostNetwork   string  `yaml:"host_network"`
-  BridgeName    string  `yaml:"bridge_name"`
-  BridgeSubnet  string  `yaml:"bridge_subnet"`
-  MaxRetries    int     `yaml:"max_retries"`
-  Scheduler     string  `yaml:"scheduler"`
+import (
+  "reflect"
+
+  "github.com/lancs-net/ukbench/spec"
+
+  "github.com/lancs-net/ukbench/pkg/runner"
+)
+
+type Scheduler interface {
+  Init(*spec.Runtime, []int, []*spec.JobPermutation) error
+  Iterator() <- chan func(bridge *runner.Bridge)
+  Cleanup()
 }
+
+var (
+  Schedulers = map[string]reflect.Type{
+    "simple": reflect.TypeOf(SimpleScheduler{}),
+    // More schedulers can be registered here...
+  }
+)

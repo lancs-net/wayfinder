@@ -33,9 +33,9 @@ package runtime
 import (
   "os"
   "fmt"
-  "time"
-  "sync"
+  // "time"
   "path"
+  "reflect"
   "io/ioutil"
   "encoding/json"
 
@@ -45,25 +45,19 @@ import (
   "github.com/lancs-net/ukbench/spec"
 
   "github.com/lancs-net/ukbench/pkg/runner"
+  "github.com/lancs-net/ukbench/pkg/scheduler"
   
   "github.com/lancs-net/ukbench/internal/log"
-  "github.com/lancs-net/ukbench/internal/list"
-  "github.com/lancs-net/ukbench/internal/coremap"
 )
 
 // RuntimeActivity contains details about the runtime of ukbench
 type RuntimeActivity struct {
   config         *spec.Runtime
   cpus          []int
-  waitList       *list.List
   bridge         *runner.Bridge
   job            *spec.Job
+  scheduler       scheduler.Scheduler
 }
-
-// tasksInFlight represents the maximum tasks which are actively running
-// concurrently.  When a tasks is completed, it will leave this list and a
-// new task can join.
-var tasksInFlight *coremap.CoreMap
 
 // NewRuntimeActivity
 func NewRuntimeActivity(r *spec.Runtime, cpus []int, jobFile string) (*RuntimeActivity, error) {
@@ -134,44 +128,7 @@ func NewRuntimeActivity(r *spec.Runtime, cpus []int, jobFile string) (*RuntimeAc
     return nil, fmt.Errorf("Could not write perms file: %s", err)
   }
 
-  // Create a list with all the perms waiting
-  activity.waitList = list.NewList(len(perms))
-
-  // Iterate over all the tasks, check if the run is stasifyable, initialize the
-  // task and add it to the waiting list.
-  for _, perm := range perms {
-    for i, r := range activity.job.Runs {
-      // Check if this particular run has requested more cores than what is
-      if r.Cores > len(activity.cpus) {
-        return nil, fmt.Errorf(
-          "Run has too many cores: %s: %d > %d",
-          r.Name,
-          r.Cores,
-          len(activity.cpus),
-        )
-
-      // Set the default number of cores to use
-      } else if r.Cores == 0 {
-        activity.job.Runs[i].Cores = 1
-      }
-    }
-
-    task, err := NewTask(perm,
-                         activity.config.WorkDir,
-                         activity.config.AllowOverride,
-                         &activity.job.Runs,
-                         activity.config.DryRun)
-    if err != nil {
-      log.Errorf("Could not initialize task: %s", err)
-    } else {
-      activity.waitList.Add(task)
-    }
-  }
-
-  log.Infof("There are total %d tasks", activity.waitList.Len())
-
-  // Prepare a map of cores to hold onto a particular task's run
-  tasksInFlight = coremap.NewCoreMap(activity.cpus)
+  // log.Infof("There are total %d tasks", activity.waitList.Len())
 
   // Set up the bridge
   activity.bridge = &runner.Bridge{
@@ -190,9 +147,6 @@ func NewRuntimeActivity(r *spec.Runtime, cpus []int, jobFile string) (*RuntimeAc
 
 // Start the job and all of its tasks
 func (a *RuntimeActivity) Start() error {
-  var freeCores []int
-  var wg sync.WaitGroup
-
   // Pre-emptively pull all images
   for _, r := range a.job.Runs {
     ref, err := dockerparser.Parse(r.Image)
@@ -208,189 +162,49 @@ func (a *RuntimeActivity) Start() error {
     }
   }
 
-  curTaskNum := 0
-  totalTasks := a.waitList.Len() * len(a.job.Runs)
-
-  // Continuously iterate over the wait list and the queue of the task to
-  // determine whether there is space for the task's run to be scheduled
-  // on the available list of cores.
-  for i := 0; a.waitList.Len() > 0; {
-    // Continiously updates the number of available cores free so this
-    // particular task's run so we can decide whether to schedule it.
-    freeCores = tasksInFlight.FreeCores()
-    if len(freeCores) == 0 {
-      continue
-    }
-
-    // Get the next task from the job's queue
-    task, err := a.waitList.Get(i)
-    if err != nil {
-      i = 0 // jump back to task 0 in case we overflow
-      log.Errorf("Could not get task from wait list: %s", err)
-      continue
-    }
-
-    // Without removing an in-order run from the queue, peak at it so we can
-    // determine whether it is schedulable based on the number of cores which
-    // are available.
-    nextRun, err := task.(*Task).runs.Peak()
-    if err != nil {
-      log.Errorf("Could not peak next run for task: %d: %s", i, err)
-
-    // Can we schedule this run?  Use an else if here so we don't ruin the
-    // ordering of the iterator `i`
-    } else if len(freeCores) >= nextRun.(spec.Run).Cores {
-      // Check if the peaked run is currently active
-      tasksInFlight.RLock()
-      for _, atr := range tasksInFlight.All() {
-        if atr != nil {
-          if (atr.(*ActiveTaskRun)).Task.permutation.UUID() == task.(*Task).permutation.UUID() {
-            tasksInFlight.RUnlock()
-            goto iterator
-          }
-        }
-      }
-      tasksInFlight.RUnlock()
-
-      // Select some core IDs for this run based on how many it requires
-      var cores []int
-      for j := 0; j < nextRun.(spec.Run).Cores; j++ {
-        cores = append(cores, freeCores[len(freeCores)-1])
-        freeCores = freeCores[:len(freeCores)-1]
-      }
-
-      // Initialize the task run
-      activeTaskRun, err := NewActiveTaskRun(
-        task.(*Task),
-        nextRun.(spec.Run),
-        cores,
-        a.bridge,
-        a.config.DryRun,
-        a.config.MaxRetries,
-      )
-      if err != nil {
-        log.Errorf("Could not initialize run for this task: %s", err)
-
-        // By cancelling all the subsequent runs, the task will be removed from 
-        // scheduler.
-        task.(*Task).Cancel()
-        goto iterator
-      }
-
-      curTaskNum++
-      log.Infof("Scheduling task run %s (%d/%d)...",
-        activeTaskRun.UUID(),
-        curTaskNum,
-        totalTasks,
-      )
-
-      // Finally, we can dequeue the run since we are about to schedule it
-      nextRun, err = task.(*Task).runs.Dequeue()
-
-      // Add the active task to the list of utilised cores
-      j := 1
-      for len(cores) > 0 {
-        coreId := cores[len(cores)-j]
-        err := tasksInFlight.Set(coreId, activeTaskRun)
-        if err != nil {
-          log.Warnf("Could not schedule task on core ID %d: %s", coreId, err)
-
-          // Use an offset to be able to skip over unavailable cores
-          if j >= len(cores) {
-            j = 1
-          } else {
-            j = j + 1
-          }
-          continue
-        }
-
-        // If we are able to use the core, remove it from the list
-        cores = cores[:len(cores)-j]
-      }
-
-      // Create a thread where we oversee the runtime of this task's run.  By
-      // starting this run, it will decide how to consume the cores we have
-      // provided to it.
-      wg.Add(1) // Update wait group for this thread to complete
-      go func() {
-        var returnCode int
-        for i := 0; i < activeTaskRun.maxRetries + 1; i++ {
-          returnCode, timeElapsed, err := activeTaskRun.Start()
-          if err != nil {
-            log.Errorf(
-              "Could not complete run: %s: %s",
-              activeTaskRun.UUID(),
-              err,
-            )
-          } else if returnCode != 0 {
-            log.Errorf(
-              "Could not complete run: %s: exited with return code %d",
-              activeTaskRun.UUID(),
-              returnCode,
-            )
-          }
-
-          if timeElapsed > 0 {
-            log.Successf("Run %s finished in %s", activeTaskRun.UUID(), timeElapsed)
-            goto activeTaskDone
-          } else {
-            log.Errorf("Run %s finished with errors", activeTaskRun.UUID())
-            if i < activeTaskRun.maxRetries + 1 {
-              log.Infof("Trying run again (%d/%d)", i + 1, activeTaskRun.maxRetries)
-            }
-          }
-        }
-
-        if err != nil || returnCode != 0 {
-          // By cancelling all subsequent runs, the task will be removed from 
-          // scheduler.
-          task.(*Task).Cancel()
-        }
-
-activeTaskDone:
-        wg.Done() // We're done here
-
-        // Remove utilized cores from this active task's run
-        for _, coreId := range activeTaskRun.CoreIds {
-          tasksInFlight.Unset(coreId)
-        }
-      }()
-    }
-
-iterator:
-    time.Sleep(time.Duration(a.config.ScheduleGrace) * time.Second)
-
-    // Remove the task if the queue is empty
-    if task.(*Task).runs.Len() == 0 {
-      a.waitList.Remove(i)
-      i = i - 1
-    }
-
-    // Have we reached the end of the list?  Go back to zero otherwise continue.
-    if a.waitList.Len() == i + 1 {
-      i = 0
-    } else {
-      i = i + 1
+  for name, typ := range(scheduler.Schedulers) {
+    if a.config.Scheduler == name {
+      a.scheduler = reflect.New(typ).Interface().(scheduler.Scheduler)
+      break
     }
   }
 
-  wg.Wait() // Wait for all controller threads for the task's run to finish
+  if a.scheduler == nil {
+    return fmt.Errorf("Could not identify scheduler: %s", a.config.Scheduler)
+  }
+
+  perms, err := a.job.Permutations()
+  if err != nil {
+    return err
+  }
+  
+  err = a.scheduler.Init(a.config, a.cpus, perms)
+  if err != nil {
+    return fmt.Errorf("Could not initialize scheduler: %s", err)
+  }
+
+  iter := a.scheduler.Iterator()
+
+  for next := range iter {
+    next(a.bridge)
+  }
 
   return nil
 }
 
 // Cleanup provides a way to deschedule all currently active tasks
 func (a *RuntimeActivity) Cleanup() {
-  // Iterate through active tasks
-  for _, atr := range tasksInFlight.All() {
-    // Skip cores which do not have a task
-    if atr == nil {
-      continue
-    }
+  a.scheduler.Cleanup()
+//   // Iterate through active tasks
+//   for _, atr := range tasksInFlight.All() {
+//     // Skip cores which do not have a task
+//     if atr == nil {
+//       continue
+//     }
 
-    err := atr.(*ActiveTaskRun).Runner.Destroy()
-    if err != nil {
-      log.Warnf("Could not destroy runner: %s", err)
-    }
-  }
+//     err := atr.(*ActiveTaskRun).Runner.Destroy()
+//     if err != nil {
+//       log.Warnf("Could not destroy runner: %s", err)
+//     }
+//   }
 }
