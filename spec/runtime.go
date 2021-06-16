@@ -31,13 +31,13 @@ package spec
 // POSSIBILITY OF SUCH DAMAGE.
 
 type Runtime struct {
-  CpuSets       string
-  DryRun        bool
-  ScheduleGrace int
-  WorkDir       string
-  AllowOverride bool
-  HostNetwork   string
-  BridgeName    string
-  BridgeSubnet  string
-  MaxRetries    int
+  CpuSets       string  `yaml:"cpu_sets"`
+  DryRun        bool    `yaml:"dry_run"`
+  ScheduleGrace int     `yaml:"schedule_grace"`
+  WorkDir       string  `yaml:"workdir"`
+  AllowOverride bool    `yaml:"allow_io_override"`
+  HostNetwork   string  `yaml:"host_network"`
+  BridgeName    string  `yaml:"bridge_name"`
+  BridgeSubnet  string  `yaml:"bridge_subnet"`
+  MaxRetries    int     `yaml:"max_retries"`
 }
