@@ -1,4 +1,4 @@
-package job
+package runtime
 // SPDX-License-Identifier: BSD-3-Clause
 //
 // Authors: Alexander Jung <a.jung@lancs.ac.uk>
@@ -145,17 +145,17 @@ func (cfg *RuntimeConfig) Prepare(filePath string) error {
   for _, perm := range perms {
     for i, r := range cfg.job.Runs {
       // Check if this particular run has requested more cores than what is
-      if run.Cores > len(cfg.Cpus) {
+      if r.Cores > len(cfg.Cpus) {
         return fmt.Errorf(
           "Run has too many cores: %s: %d > %d",
-          run.Name,
-          run.Cores,
+          r.Name,
+          r.Cores,
           len(cfg.Cpus),
         )
 
       // Set the default number of cores to use
-      } else if run.Cores == 0 {
-        job.Runs[i].Cores = 1
+      } else if r.Cores == 0 {
+        cfg.job.Runs[i].Cores = 1
       }
     }
 

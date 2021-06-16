@@ -42,7 +42,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/lancs-net/ukbench/internal/log"
-	"github.com/lancs-net/ukbench/job"
+	ukruntime "github.com/lancs-net/ukbench/pkg/runtime"
 )
 
 type RunConfig struct {
@@ -66,7 +66,7 @@ var (
     DisableFlagsInUseLine: true,
   }
   runConfig = &RunConfig{}
-  activeJob *job.RuntimeConfig
+  activeJob *ukruntime.RuntimeConfig
 )
 
 func init() {
@@ -168,7 +168,7 @@ func doRunCmd(cmd *cobra.Command, args []string) {
     os.MkdirAll(rersultsDir, os.ModePerm)
   }
 
-  activeJob = &job.RuntimeConfig{
+  activeJob = &ukruntime.RuntimeConfig{
     Cpus:          cpus,
     BridgeName:    runConfig.BridgeName,
     BridgeIface:   runConfig.HostNetwork,
@@ -188,7 +188,7 @@ func doRunCmd(cmd *cobra.Command, args []string) {
   setupInterruptHandler()
 
   // Prepare environment
-  err = job.PrepareEnvironment(cpus, runConfig.DryRun)
+  err = ukruntime.PrepareEnvironment(cpus, runConfig.DryRun)
   if err != nil {
     log.Errorf("Could not prepare environment: %s", err)
     cleanup()
@@ -274,7 +274,7 @@ func cleanup() {
     log.Warnf("Could not delete container cache: %s", err)
   }
 
-  job.RevertEnvironment(runConfig.DryRun)
+  ukruntime.RevertEnvironment(runConfig.DryRun)
 
   // TODO: Clean up bridge
 }
