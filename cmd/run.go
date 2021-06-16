@@ -41,21 +41,11 @@ import (
 
 	"github.com/spf13/cobra"
 
+  "github.com/lancs-net/ukbench/spec"
+
 	"github.com/lancs-net/ukbench/internal/log"
 	ukruntime "github.com/lancs-net/ukbench/pkg/runtime"
 )
-
-type RunConfig struct {
-  CpuSets       string
-  DryRun        bool
-  ScheduleGrace int
-  WorkDir       string
-  AllowOverride bool
-  HostNetwork   string
-  BridgeName    string
-  BridgeSubnet  string
-  MaxRetries    int
-}
 
 var (
   runCmd = &cobra.Command{
@@ -65,8 +55,8 @@ var (
     Args: cobra.ExactArgs(1),
     DisableFlagsInUseLine: true,
   }
-  runConfig = &RunConfig{}
-  activeJob *ukruntime.RuntimeConfig
+  runConfig = &spec.Runtime{}
+  activeJob *ukruntime.RuntimeActivity
 )
 
 func init() {
@@ -168,18 +158,7 @@ func doRunCmd(cmd *cobra.Command, args []string) {
     os.MkdirAll(rersultsDir, os.ModePerm)
   }
 
-  activeJob = &ukruntime.RuntimeConfig{
-    Cpus:          cpus,
-    BridgeName:    runConfig.BridgeName,
-    BridgeIface:   runConfig.HostNetwork,
-    BridgeSubnet:  runConfig.BridgeSubnet,
-    DryRun:        runConfig.DryRun,
-    ScheduleGrace: runConfig.ScheduleGrace,
-    AllowOverride: runConfig.AllowOverride,
-    WorkDir:       runConfig.WorkDir,
-    MaxRetries:    runConfig.MaxRetries,
-  }
-  err = activeJob.ParseJobFile(args[0])
+  activity, err := ukruntime.NewRuntimeActivity(runConfig, cpus, args[0])
 	if err != nil {
 		log.Fatalf("Could not read configuration: %s", err)
 		os.Exit(1)
@@ -196,7 +175,7 @@ func doRunCmd(cmd *cobra.Command, args []string) {
   }
 
   // Start the job with its various tasks
-  err = activeJob.Start()
+  err = activity.Start()
   if err != nil {
     log.Errorf("Could not start job: %s", err)
     cleanup()

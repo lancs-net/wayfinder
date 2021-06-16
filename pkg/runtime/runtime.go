@@ -51,17 +51,10 @@ import (
   "github.com/lancs-net/ukbench/internal/coremap"
 )
 
-// RuntimeConfig contains details about the runtime of ukbench
-type RuntimeConfig struct {
-  Cpus          []int
-  BridgeName      string
-  BridgeIface     string
-  BridgeSubnet    string
-  DryRun          bool
-  ScheduleGrace   int
-  WorkDir         string
-  AllowOverride   bool
-  MaxRetries      int
+// RuntimeActivity contains details about the runtime of ukbench
+type RuntimeActivity struct {
+  config         *spec.Runtime
+  cpus          []int
   waitList       *list.List
   bridge         *runner.Bridge
   job            *spec.Job
@@ -72,47 +65,51 @@ type RuntimeConfig struct {
 // new task can join.
 var tasksInFlight *coremap.CoreMap
 
-// NewJob prepares a job yaml file
-func (cfg *RuntimeConfig) ParseJobFile(filePath string) error {
+// NewRuntimeActivity
+func NewRuntimeActivity(r *spec.Runtime, cpus []int, jobFile string) (*RuntimeActivity, error) {
   // Check if the path is set
-  if len(filePath) == 0 {
-    return fmt.Errorf("File path cannot be empty")
+  if len(jobFile) == 0 {
+    return nil, fmt.Errorf("File path cannot be empty")
   }
 
   // Check if the file exists
-  if _, err := os.Stat(filePath); os.IsNotExist(err) {
-    return fmt.Errorf("File does not exist: %s", filePath)
+  if _, err := os.Stat(jobFile); os.IsNotExist(err) {
+    return nil, fmt.Errorf("File does not exist: %s", jobFile)
   }
 
-  log.Debugf("Reading job configuration: %s", filePath)
+  log.Debugf("Reading job configuration: %s", jobFile)
 
   // Slurp the file contents into memory
-  dat, err := ioutil.ReadFile(filePath)
+  dat, err := ioutil.ReadFile(jobFile)
   if err != nil {
-    return err
+    return nil, err
   }
 
   if len(dat) == 0 {
-    return fmt.Errorf("File is empty")
+    return nil, fmt.Errorf("File is empty")
   }
 
-  cfg.job = &spec.Job{}
+  activity := &RuntimeActivity{
+    config:  r,
+    cpus:    cpus,
+    job:    &spec.Job{},
+  }
 
-  err = yaml.Unmarshal([]byte(dat), cfg.job)
+  err = yaml.Unmarshal([]byte(dat), activity.job)
   if err != nil {
-    return err
+    return nil, err
   }
 
   log.Info("Calculating number of tasks...")
 
-  if len(cfg.job.Params) == 0 {
-    return fmt.Errorf("You have not set any parameters")
+  if len(activity.job.Params) == 0 {
+    return nil, fmt.Errorf("You have not set any parameters")
   }
 
   // Create all permutations for a job, iterating over all possible parameters
-  perms, err := cfg.job.Permutations()
+  perms, err := activity.job.Permutations()
   if err != nil {
-    return err
+    return nil, err
   }
 
   // Write a tasks file containing all the permutations
@@ -127,73 +124,77 @@ func (cfg *RuntimeConfig) ParseJobFile(filePath string) error {
 
   b, err := json.MarshalIndent(permsJson, "", "\t")
   if err != nil {
-    return fmt.Errorf("Could not marshal JSON of permutations: %s", err)
+    return nil, fmt.Errorf("Could not marshal JSON of permutations: %s", err)
   }
 
-  permsJsonFile := path.Join(cfg.WorkDir, "results", "perms.json")
+  permsJsonFile := path.Join(activity.config.WorkDir, "results", "perms.json")
   log.Debugf("Writing perms file %s...", permsJsonFile)
   err = ioutil.WriteFile(permsJsonFile, b, 0644)
   if err != nil {
-    return fmt.Errorf("Could not write perms file: %s", err)
+    return nil, fmt.Errorf("Could not write perms file: %s", err)
   }
 
   // Create a list with all the perms waiting
-  cfg.waitList = list.NewList(len(perms))
+  activity.waitList = list.NewList(len(perms))
 
   // Iterate over all the tasks, check if the run is stasifyable, initialize the
   // task and add it to the waiting list.
   for _, perm := range perms {
-    for i, r := range cfg.job.Runs {
+    for i, r := range activity.job.Runs {
       // Check if this particular run has requested more cores than what is
-      if r.Cores > len(cfg.Cpus) {
-        return fmt.Errorf(
+      if r.Cores > len(activity.cpus) {
+        return nil, fmt.Errorf(
           "Run has too many cores: %s: %d > %d",
           r.Name,
           r.Cores,
-          len(cfg.Cpus),
+          len(activity.cpus),
         )
 
       // Set the default number of cores to use
       } else if r.Cores == 0 {
-        cfg.job.Runs[i].Cores = 1
+        activity.job.Runs[i].Cores = 1
       }
     }
 
-    task, err := NewTask(perm, cfg.WorkDir, cfg.AllowOverride, &cfg.job.Runs, cfg.DryRun)
+    task, err := NewTask(perm,
+                         activity.config.WorkDir,
+                         activity.config.AllowOverride,
+                         &activity.job.Runs,
+                         activity.config.DryRun)
     if err != nil {
       log.Errorf("Could not initialize task: %s", err)
     } else {
-      cfg.waitList.Add(task)
+      activity.waitList.Add(task)
     }
   }
 
-  log.Infof("There are total %d tasks", cfg.waitList.Len())
+  log.Infof("There are total %d tasks", activity.waitList.Len())
 
   // Prepare a map of cores to hold onto a particular task's run
-  tasksInFlight = coremap.NewCoreMap(cfg.Cpus)
+  tasksInFlight = coremap.NewCoreMap(activity.cpus)
 
   // Set up the bridge
-  cfg.bridge = &runner.Bridge{
-    Name:      cfg.BridgeName,
-    Interface: cfg.BridgeIface,
-    Subnet:    cfg.BridgeSubnet,
-    CacheDir:  path.Join(cfg.WorkDir, ".cache"),
+  activity.bridge = &runner.Bridge{
+    Name:      activity.config.BridgeName,
+    Interface: activity.config.HostNetwork,
+    Subnet:    activity.config.BridgeSubnet,
+    CacheDir:  path.Join(activity.config.WorkDir, ".cache"),
   }
-  err = cfg.bridge.Init(cfg.DryRun)
+  err = activity.bridge.Init(activity.config.DryRun)
   if err != nil {
-    return fmt.Errorf("Could not create bridge: %s", err)
+    return nil, fmt.Errorf("Could not create bridge: %s", err)
   }
 
-  return nil
+  return activity, nil
 }
 
 // Start the job and all of its tasks
-func (cfg *RuntimeConfig) Start() error {
+func (a *RuntimeActivity) Start() error {
   var freeCores []int
   var wg sync.WaitGroup
 
   // Pre-emptively pull all images
-  for _, r := range cfg.job.Runs {
+  for _, r := range a.job.Runs {
     ref, err := dockerparser.Parse(r.Image)
     if err != nil {
       return fmt.Errorf("Could not parse image: %s", err)
@@ -201,19 +202,19 @@ func (cfg *RuntimeConfig) Start() error {
 
     log.Infof("Pulling %s...", ref.Remote())
 
-    _, err = runner.PullImage(ref.Remote(), cfg.bridge.CacheDir)
+    _, err = runner.PullImage(ref.Remote(), a.bridge.CacheDir)
     if err != nil {
       return fmt.Errorf("Could not pull image: %s", err)
     }
   }
 
   curTaskNum := 0
-  totalTasks := cfg.waitList.Len() * len(cfg.job.Runs)
+  totalTasks := a.waitList.Len() * len(a.job.Runs)
 
   // Continuously iterate over the wait list and the queue of the task to
   // determine whether there is space for the task's run to be scheduled
   // on the available list of cores.
-  for i := 0; cfg.waitList.Len() > 0; {
+  for i := 0; a.waitList.Len() > 0; {
     // Continiously updates the number of available cores free so this
     // particular task's run so we can decide whether to schedule it.
     freeCores = tasksInFlight.FreeCores()
@@ -222,7 +223,7 @@ func (cfg *RuntimeConfig) Start() error {
     }
 
     // Get the next task from the job's queue
-    task, err := cfg.waitList.Get(i)
+    task, err := a.waitList.Get(i)
     if err != nil {
       i = 0 // jump back to task 0 in case we overflow
       log.Errorf("Could not get task from wait list: %s", err)
@@ -263,9 +264,9 @@ func (cfg *RuntimeConfig) Start() error {
         task.(*Task),
         nextRun.(spec.Run),
         cores,
-        cfg.bridge,
-        cfg.DryRun,
-        cfg.MaxRetries,
+        a.bridge,
+        a.config.DryRun,
+        a.config.MaxRetries,
       )
       if err != nil {
         log.Errorf("Could not initialize run for this task: %s", err)
@@ -357,16 +358,16 @@ activeTaskDone:
     }
 
 iterator:
-    time.Sleep(time.Duration(cfg.ScheduleGrace) * time.Second)
+    time.Sleep(time.Duration(a.config.ScheduleGrace) * time.Second)
 
     // Remove the task if the queue is empty
     if task.(*Task).runs.Len() == 0 {
-      cfg.waitList.Remove(i)
+      a.waitList.Remove(i)
       i = i - 1
     }
 
     // Have we reached the end of the list?  Go back to zero otherwise continue.
-    if cfg.waitList.Len() == i + 1 {
+    if a.waitList.Len() == i + 1 {
       i = 0
     } else {
       i = i + 1
@@ -379,7 +380,7 @@ iterator:
 }
 
 // Cleanup provides a way to deschedule all currently active tasks
-func (cfg *RuntimeConfig) Cleanup() {
+func (a *RuntimeActivity) Cleanup() {
   // Iterate through active tasks
   for _, atr := range tasksInFlight.All() {
     // Skip cores which do not have a task
