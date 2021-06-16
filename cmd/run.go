@@ -179,7 +179,7 @@ func doRunCmd(cmd *cobra.Command, args []string) {
     WorkDir:       runConfig.WorkDir,
     MaxRetries:    runConfig.MaxRetries,
   }
-  err = activeJob.Prepare(args[0])
+  err = activeJob.ParseJobFile(args[0])
 	if err != nil {
 		log.Fatalf("Could not read configuration: %s", err)
 		os.Exit(1)

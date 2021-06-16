@@ -73,7 +73,7 @@ type RuntimeConfig struct {
 var tasksInFlight *coremap.CoreMap
 
 // NewJob prepares a job yaml file
-func (cfg *RuntimeConfig) Prepare(filePath string) error {
+func (cfg *RuntimeConfig) ParseJobFile(filePath string) error {
   // Check if the path is set
   if len(filePath) == 0 {
     return fmt.Errorf("File path cannot be empty")
