@@ -110,19 +110,19 @@ func (t *Task) Cancel() {
 // ActiveTaskRun contains information about a particular task's run.
 type ActiveTaskRun struct {
   Task       *Task
-  Runner     *run.Runner
+  Runner     *runner.Runner
   run        *spec.Run
   CoreIds   []int // the exact core numbers this task is using
   log        *log.Logger
   workDir     string
   dryRun      bool
-  bridge     *run.Bridge
+  bridge     *runner.Bridge
   maxRetries  int
 }
 
 // NewActiveTaskRun initializes the current task and the run step for the
 // the specified cores.
-func NewActiveTaskRun(task *Task, run spec.Run, coreIds []int, bridge *run.Bridge, dryRun bool, maxRetries int) (*ActiveTaskRun, error) {
+func NewActiveTaskRun(task *Task, run spec.Run, coreIds []int, bridge *runner.Bridge, dryRun bool, maxRetries int) (*ActiveTaskRun, error) {
   atr := &ActiveTaskRun{
     Task:       task,
     run:       &run,
@@ -162,7 +162,7 @@ func (atr *ActiveTaskRun) Start() (int, time.Duration, error) {
     env = append(env, fmt.Sprintf("UKBENCH_CORE_ID%d=%d", i, coreId))
   }
 
-  config := &run.RunnerConfig{
+  config := &runner.RunnerConfig{
     Log:           atr.log,
     CacheDir:      atr.Task.cacheDir,
     ResultsDir:    atr.Task.resultsDir,
@@ -184,7 +184,7 @@ func (atr *ActiveTaskRun) Start() (int, time.Duration, error) {
     return 1, -1, fmt.Errorf("Run did not specify path or cmd: %s", atr.run.Name)
   }
 
-  atr.Runner, err = run.NewRunner(config, atr.bridge, atr.dryRun)
+  atr.Runner, err = runner.NewRunner(config, atr.bridge, atr.dryRun)
   if err != nil {
     return 1, -1, err
   }

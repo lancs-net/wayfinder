@@ -44,9 +44,9 @@ import (
 
   "github.com/lancs-net/ukbench/spec"
 
+  "github.com/lancs-net/ukbench/pkg/runner"
+  
   "github.com/lancs-net/ukbench/internal/log"
-  "github.com/lancs-net/ukbench/run"
-
   "github.com/lancs-net/ukbench/internal/list"
   "github.com/lancs-net/ukbench/internal/coremap"
 )
@@ -63,7 +63,7 @@ type RuntimeConfig struct {
   AllowOverride   bool
   MaxRetries      int
   waitList       *list.List
-  bridge         *run.Bridge
+  bridge         *runner.Bridge
   job            *spec.Job
 }
 
@@ -173,7 +173,7 @@ func (cfg *RuntimeConfig) Prepare(filePath string) error {
   tasksInFlight = coremap.NewCoreMap(cfg.Cpus)
 
   // Set up the bridge
-  cfg.bridge = &run.Bridge{
+  cfg.bridge = &runner.Bridge{
     Name:      cfg.BridgeName,
     Interface: cfg.BridgeIface,
     Subnet:    cfg.BridgeSubnet,
@@ -201,7 +201,7 @@ func (cfg *RuntimeConfig) Start() error {
 
     log.Infof("Pulling %s...", ref.Remote())
 
-    _, err = run.PullImage(ref.Remote(), cfg.bridge.CacheDir)
+    _, err = runner.PullImage(ref.Remote(), cfg.bridge.CacheDir)
     if err != nil {
       return fmt.Errorf("Could not pull image: %s", err)
     }

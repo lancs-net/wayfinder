@@ -1,4 +1,4 @@
-package run
+package runner
 // SPDX-License-Identifier: BSD-3-Clause
 //
 // Authors: Alexander Jung <a.jung@lancs.ac.uk>
