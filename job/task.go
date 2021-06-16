@@ -37,37 +37,32 @@ import (
   "time"
   "path"
   "strings"
-	"crypto/md5"
 
   "github.com/lancs-net/ukbench/internal/log"
   "github.com/lancs-net/ukbench/run"
+  "github.com/lancs-net/ukbench/spec"
 )
-
-type TaskParam struct {
-  Name  string
-  Type  string
-  Value string
-}
 
 // Task is the specific iterated configuration
 type Task struct {
-  Params      []TaskParam
-  Inputs     *[]run.Input
-  Outputs    *[]run.Output
+  permutation  *spec.JobPermutation
   runs         *Queue
-  uuid          string
   resultsDir    string
   cacheDir      string
   AllowOverride bool
 }
 
 // Init prepare the task 
-func (t *Task) Init(workDir string, allowOverride bool, runs *[]run.Run, dryRun bool) error {
+func NewTask(perm *spec.JobPermutation, workDir string, allowOverride bool, runs *[]spec.Run, dryRun bool) (*Task, error) {
+  t := &Task{
+    permutation: perm,
+  }
+
   // Create a queue of runs for this particular task
   t.runs = NewQueue(len(*runs))
 
   // Set the working directory
-  t.resultsDir = path.Join(workDir, "results", t.UUID())
+  t.resultsDir = path.Join(workDir, "results", t.permutation.UUID())
   t.cacheDir = path.Join(workDir, ".cache")
 
   // Set additional task configuration
@@ -83,10 +78,10 @@ func (t *Task) Init(workDir string, allowOverride bool, runs *[]run.Run, dryRun 
   } else {
     isEmpty, err := IsDirEmpty(t.resultsDir)
     if err != nil {
-      return err
+      return nil, err
     }
     if !isEmpty && !allowOverride {
-      return fmt.Errorf("Task directory not empty: %s", t.resultsDir)
+      return nil, fmt.Errorf("Task directory not empty: %s", t.resultsDir)
     }
 
     if !dryRun {
@@ -99,7 +94,7 @@ func (t *Task) Init(workDir string, allowOverride bool, runs *[]run.Run, dryRun 
     t.runs.Enqueue(run)
   }
 
-  return nil
+  return t, nil
 }
 
 // Cancel the task by removing everything from the queue
@@ -110,26 +105,11 @@ func (t *Task) Cancel() {
   t.runs.Clear()
 }
 
-func (t *Task) UUID() string {
-  if len(t.uuid) == 0 {
-
-    // Calculate the UUID based on a reproducible md5 seed
-    md5val := md5.New()
-    for _, param := range t.Params {
-      io.WriteString(md5val, fmt.Sprintf("%s=%s\n", param.Name, param.Value))
-    }
-
-    t.uuid = fmt.Sprintf("%x", md5val.Sum(nil))
-  }
-
-  return t.uuid
-}
-
 // ActiveTaskRun contains information about a particular task's run.
 type ActiveTaskRun struct {
   Task       *Task
   Runner     *run.Runner
-  run        *run.Run
+  run        *spec.Run
   CoreIds   []int // the exact core numbers this task is using
   log        *log.Logger
   workDir     string
@@ -140,7 +120,7 @@ type ActiveTaskRun struct {
 
 // NewActiveTaskRun initializes the current task and the run step for the
 // the specified cores.
-func NewActiveTaskRun(task *Task, run run.Run, coreIds []int, bridge *run.Bridge, dryRun bool, maxRetries int) (*ActiveTaskRun, error) {
+func NewActiveTaskRun(task *Task, run spec.Run, coreIds []int, bridge *run.Bridge, dryRun bool, maxRetries int) (*ActiveTaskRun, error) {
   atr := &ActiveTaskRun{
     Task:       task,
     run:       &run,
@@ -160,7 +140,7 @@ func NewActiveTaskRun(task *Task, run run.Run, coreIds []int, bridge *run.Bridge
 
 // UUID returns the Unique ID for the task and run
 func (atr *ActiveTaskRun) UUID() string {
-  return fmt.Sprintf("%s-%s", atr.Task.UUID(), atr.run.Name)
+  return fmt.Sprintf("%s-%s", atr.Task.permutation.UUID(), atr.run.Name)
 }
 
 // Start the task's run
@@ -168,7 +148,7 @@ func (atr *ActiveTaskRun) Start() (int, time.Duration, error) {
   var env []string
   var err error
 
-  for _, param := range atr.Task.Params {
+  for _, param := range atr.Task.permutation.Params {
     env = append(env, fmt.Sprintf("%s=%s", param.Name, param.Value))
   }
 
@@ -189,8 +169,8 @@ func (atr *ActiveTaskRun) Start() (int, time.Duration, error) {
     Image:         atr.run.Image,
     CoreIds:       atr.CoreIds,
     Devices:       atr.run.Devices,
-    Inputs:        atr.Task.Inputs,
-    Outputs:       atr.Task.Outputs,
+    Inputs:        atr.Task.permutation.Inputs,
+    Outputs:       atr.Task.permutation.Outputs,
     Env:           env,
     Capabilities:  atr.run.Capabilities,
   }

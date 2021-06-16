@@ -66,7 +66,7 @@ var (
     DisableFlagsInUseLine: true,
   }
   runConfig = &RunConfig{}
-  activeJob *job.Job
+  activeJob *job.RuntimeConfig
 )
 
 func init() {
@@ -168,7 +168,7 @@ func doRunCmd(cmd *cobra.Command, args []string) {
     os.MkdirAll(rersultsDir, os.ModePerm)
   }
 
-  activeJob, err := job.NewJob(args[0], &job.RuntimeConfig{
+  activeJob = &job.RuntimeConfig{
     Cpus:          cpus,
     BridgeName:    runConfig.BridgeName,
     BridgeIface:   runConfig.HostNetwork,
@@ -178,7 +178,8 @@ func doRunCmd(cmd *cobra.Command, args []string) {
     AllowOverride: runConfig.AllowOverride,
     WorkDir:       runConfig.WorkDir,
     MaxRetries:    runConfig.MaxRetries,
-  })
+  }
+  err = activeJob.Prepare(args[0])
 	if err != nil {
 		log.Fatalf("Could not read configuration: %s", err)
 		os.Exit(1)

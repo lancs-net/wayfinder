@@ -33,16 +33,16 @@ package job
 import (
   "os"
   "fmt"
-  "math"
   "time"
   "sync"
   "path"
-  "strconv"
   "io/ioutil"
   "encoding/json"
 
   "gopkg.in/yaml.v2"
   "github.com/novln/docker-parser"
+
+  "github.com/lancs-net/ukbench/spec"
 
   "github.com/lancs-net/ukbench/internal/log"
   "github.com/lancs-net/ukbench/run"
@@ -50,29 +50,6 @@ import (
   "github.com/lancs-net/ukbench/internal/list"
   "github.com/lancs-net/ukbench/internal/coremap"
 )
-
-type JobParam struct {
-  Name      string `yaml:"name"`
-  Type      string `yaml:"type"`
-  Default   string `yaml:"default"`
-  Only    []string `yaml:"only"`
-  Min       string `yaml:"min"`
-  Max       string `yaml:"max"`
-  Step      string `yaml:"step"`
-  StepMode  string `yaml:"step_mode"`
-}
-
-type Job struct {
-  Params        []JobParam   `yaml:"params"`
-  Inputs        []run.Input  `yaml:"inputs"`
-  Outputs       []run.Output `yaml:"outputs"`
-  Runs          []run.Run    `yaml:"runs"`
-  waitList     *list.List
-  scheduleGrace int
-  dryRun        bool
-  bridge       *run.Bridge
-  maxRetries    int
-}
 
 // RuntimeConfig contains details about the runtime of ukbench
 type RuntimeConfig struct {
@@ -85,6 +62,9 @@ type RuntimeConfig struct {
   WorkDir         string
   AllowOverride   bool
   MaxRetries      int
+  waitList       *list.List
+  bridge         *run.Bridge
+  job            *spec.Job
 }
 
 // tasksInFlight represents the maximum tasks which are actively running
@@ -93,15 +73,15 @@ type RuntimeConfig struct {
 var tasksInFlight *coremap.CoreMap
 
 // NewJob prepares a job yaml file
-func NewJob(filePath string, cfg *RuntimeConfig) (*Job, error) {
+func (cfg *RuntimeConfig) Prepare(filePath string) error {
   // Check if the path is set
   if len(filePath) == 0 {
-    return nil, fmt.Errorf("File path cannot be empty")
+    return fmt.Errorf("File path cannot be empty")
   }
 
   // Check if the file exists
   if _, err := os.Stat(filePath); os.IsNotExist(err) {
-    return nil, fmt.Errorf("File does not exist: %s", filePath)
+    return fmt.Errorf("File does not exist: %s", filePath)
   }
 
   log.Debugf("Reading job configuration: %s", filePath)
@@ -109,71 +89,64 @@ func NewJob(filePath string, cfg *RuntimeConfig) (*Job, error) {
   // Slurp the file contents into memory
   dat, err := ioutil.ReadFile(filePath)
   if err != nil {
-    return nil, err
+    return err
   }
 
   if len(dat) == 0 {
-    return nil, fmt.Errorf("File is empty")
+    return fmt.Errorf("File is empty")
   }
 
-  job := Job{}
+  cfg.job = &spec.Job{}
 
-  err = yaml.Unmarshal([]byte(dat), &job)
+  err = yaml.Unmarshal([]byte(dat), cfg.job)
   if err != nil {
-    return nil, err
+    return err
   }
 
   log.Info("Calculating number of tasks...")
 
-  if len(job.Params) == 0 {
-    return nil, fmt.Errorf("You have not set any parameters")
+  if len(cfg.job.Params) == 0 {
+    return fmt.Errorf("You have not set any parameters")
   }
 
-  // Create all tasks for job, iterating over all possible parameter 
-  // permutations
-  tasks, err := job.tasks()
+  // Create all permutations for a job, iterating over all possible parameters
+  perms, err := cfg.job.Permutations()
   if err != nil {
-    return nil, err
+    return err
   }
 
   // Write a tasks file containing all the permutations
-  tasksJson := make(map[string]interface{})
-  for _, task := range tasks {
+  permsJson := make(map[string]interface{})
+  for _, perm := range perms {
     params := make(map[string]string)
-    for _, param := range task.Params {
+    for _, param := range perm.Params {
       params[param.Name] = param.Value
     }
-    tasksJson[task.UUID()] = params
+    permsJson[perm.UUID()] = params
   }
 
-  b, err := json.MarshalIndent(tasksJson, "", "\t")
+  b, err := json.MarshalIndent(permsJson, "", "\t")
   if err != nil {
-    return nil, fmt.Errorf("Could not marshal JSON of tasks: %s", err)
+    return fmt.Errorf("Could not marshal JSON of permutations: %s", err)
   }
 
-  tasksJsonFile := path.Join(cfg.WorkDir, "results", "tasks.json")
-  log.Debugf("Writing tasks file %s...", tasksJsonFile)
-  err = ioutil.WriteFile(tasksJsonFile, b, 0644)
+  permsJsonFile := path.Join(cfg.WorkDir, "results", "perms.json")
+  log.Debugf("Writing perms file %s...", permsJsonFile)
+  err = ioutil.WriteFile(permsJsonFile, b, 0644)
   if err != nil {
-    return nil, fmt.Errorf("Could not write tasks file: %s", err)
+    return fmt.Errorf("Could not write perms file: %s", err)
   }
 
-  // Create a list with all the tasks waiting
-  job.waitList = list.NewList(len(tasks))
-
-  // Set the schedule grace time
-  job.scheduleGrace = cfg.ScheduleGrace
-
-  job.dryRun = cfg.DryRun
-  job.maxRetries = cfg.MaxRetries
+  // Create a list with all the perms waiting
+  cfg.waitList = list.NewList(len(perms))
 
   // Iterate over all the tasks, check if the run is stasifyable, initialize the
   // task and add it to the waiting list.
-  for _, task := range tasks {
-    for i, run := range job.Runs {
+  for _, perm := range perms {
+    for i, r := range cfg.job.Runs {
       // Check if this particular run has requested more cores than what is
       if run.Cores > len(cfg.Cpus) {
-        return nil, fmt.Errorf(
+        return fmt.Errorf(
           "Run has too many cores: %s: %d > %d",
           run.Name,
           run.Cores,
@@ -186,221 +159,41 @@ func NewJob(filePath string, cfg *RuntimeConfig) (*Job, error) {
       }
     }
 
-    err := task.Init(cfg.WorkDir, cfg.AllowOverride, &job.Runs, cfg.DryRun)
+    task, err := NewTask(perm, cfg.WorkDir, cfg.AllowOverride, &cfg.job.Runs, cfg.DryRun)
     if err != nil {
       log.Errorf("Could not initialize task: %s", err)
     } else {
-      job.waitList.Add(task)
+      cfg.waitList.Add(task)
     }
   }
 
-  log.Infof("There are total %d tasks", job.waitList.Len())
+  log.Infof("There are total %d tasks", cfg.waitList.Len())
 
   // Prepare a map of cores to hold onto a particular task's run
   tasksInFlight = coremap.NewCoreMap(cfg.Cpus)
 
   // Set up the bridge
-  job.bridge = &run.Bridge{
+  cfg.bridge = &run.Bridge{
     Name:      cfg.BridgeName,
     Interface: cfg.BridgeIface,
     Subnet:    cfg.BridgeSubnet,
     CacheDir:  path.Join(cfg.WorkDir, ".cache"),
   }
-  err = job.bridge.Init(cfg.DryRun)
+  err = cfg.bridge.Init(cfg.DryRun)
   if err != nil {
-    return nil, fmt.Errorf("Could not create bridge: %s", err)
+    return fmt.Errorf("Could not create bridge: %s", err)
   }
 
-  return &job, nil
-}
-
-// parseParamInt attends to string parameters and its possible permutations
-func parseParamStr(param *JobParam) ([]TaskParam, error) {
-  var params []TaskParam
-
-  if len(param.Only) > 0 {
-    for _, val := range param.Only {
-      params = append(params, TaskParam{
-        Name:  param.Name,
-        Type:  param.Type,
-        Value: val,
-      })
-    }
-  } else if len(param.Default) > 0 {
-    params = append(params, TaskParam{
-      Name:  param.Name,
-      Type:  param.Type,
-      Value: param.Default,
-    })
-  }
-
-  return params, nil
-}
-
-// parseParamInt attends to integer parameters and its possible permutations
-func parseParamInt(param *JobParam) ([]TaskParam, error) {
-  var params []TaskParam
-
-  // Parse values in only
-  if len(param.Only) > 0 {
-    for _, val := range param.Only {
-      params = append(params, TaskParam{
-        Name:  param.Name,
-        Type:  param.Type,
-        Value: val,
-      })
-    }
-
-  // Parse range between min and max
-  } else if len(param.Min) > 0 {
-    min, err := strconv.Atoi(param.Min)
-    if err != nil {
-      return nil, err
-    }
-    
-    max, err := strconv.Atoi(param.Max)
-    if err != nil {
-      return nil, err
-    }
-
-    if max < min {
-      return nil, fmt.Errorf(
-        "Min can't be greater than max for %s: %d < %d", param.Name, min, max,
-      )
-    }
-
-    // Figure out the step
-    step := 1
-    if len(param.Step) > 0 {
-      step, err = strconv.Atoi(param.Step)
-      if err != nil || step == 0 {
-        return nil, fmt.Errorf(
-          "Invalid step for %s: %s", param.Name, param.Step,
-        )
-      }
-    }
-
-    // Use iterative step
-    if len(param.StepMode) == 0 || param.StepMode == "increment" {
-      for i := min; i <= max; i += step {
-        params = append(params, TaskParam{
-          Name:  param.Name,
-          Type:  param.Type,
-          Value: strconv.Itoa(i),
-        })
-      }
-
-    // Use exponential step
-    } else if param.StepMode == "power" {
-      for i, j := min, min; i <= max; j++ {
-        params = append(params, TaskParam{
-          Name:  param.Name,
-          Type:  param.Type,
-          Value: strconv.Itoa(i),
-        })
-        i = int(math.Pow(float64(step), float64(j)))
-      }
-
-    // Unknown step mode
-    } else {
-      return nil, fmt.Errorf(
-        "Unknown step mode for param %s: %s", param.Name, param.StepMode,
-      )
-    }
-
-  } else if len(param.Default) > 0 {
-    params = append(params, TaskParam{
-      Name:  param.Name,
-      Type:  param.Type,
-      Value: param.Default,
-    })
-
-  } else {
-    log.Warnf("Parameter not parsed: %s", param.Name)
-  }
-
-  return params, nil
-}
-
-// paramPermutations discovers all the possible variants of a particular
-// parameter based on its type and options.
-func paramPermutations(param *JobParam) ([]TaskParam, error) {
-  switch t := param.Type; t {
-  case "string":
-    return parseParamStr(param)
-  case "int":
-    return parseParamInt(param)
-  case "integer":
-    return parseParamInt(param)
-  }
-  return nil, fmt.Errorf(
-    "Unknown parameter type: \"%s\" for %s", param.Type, param.Name,
-  )
-}
-
-// nextTask recursively iterates across paramters to generate a set of tasks
-func (j *Job) nextTask(i int, tasks []*Task, curr []TaskParam) ([]*Task, error) {
-  // List all permutations for this parameter
-  params, err := paramPermutations(&j.Params[i])
-  if err != nil {
-    return nil, err
-  }
-
-  for _, param := range params {
-    if len(curr) > 0 {
-      last := curr[len(curr)-1]
-      if last.Name == param.Name {
-        curr = curr[:len(curr)-1]
-      }
-    }
-
-    curr = append(curr, param)
-
-    // Break when there are no more parameters to iterate over, thus creating
-    // the task.
-    if i + 1 == len(j.Params) {
-      var p = make([]TaskParam, len(j.Params))
-      copy(p, curr)
-      task := &Task{
-        Inputs:  &j.Inputs,
-        Outputs: &j.Outputs,
-        Params:   p,
-      }
-      tasks = append(tasks, task)
-
-    // Otherwise, recursively parse parameters in-order    
-    } else {
-      nextTasks, err := j.nextTask(i + 1, nil, curr)
-      if err != nil {
-        return nil, err
-      }
-
-      tasks = append(tasks, nextTasks...)
-    }
-  }
-
-  return tasks, nil
-}
-
-// tasks returns a list of all possible tasks based on parameterisation
-func (j *Job) tasks() ([]*Task, error) {
-  var tasks []*Task
-
-  tasks, err := j.nextTask(0, tasks, nil)
-  if err != nil {
-    return nil, err
-  }
-
-  return tasks, nil
+  return nil
 }
 
 // Start the job and all of its tasks
-func (j *Job) Start() error {
+func (cfg *RuntimeConfig) Start() error {
   var freeCores []int
   var wg sync.WaitGroup
 
   // Pre-emptively pull all images
-  for _, r := range j.Runs {
+  for _, r := range cfg.job.Runs {
     ref, err := dockerparser.Parse(r.Image)
     if err != nil {
       return fmt.Errorf("Could not parse image: %s", err)
@@ -408,19 +201,19 @@ func (j *Job) Start() error {
 
     log.Infof("Pulling %s...", ref.Remote())
 
-    _, err = run.PullImage(ref.Remote(), j.bridge.CacheDir)
+    _, err = run.PullImage(ref.Remote(), cfg.bridge.CacheDir)
     if err != nil {
       return fmt.Errorf("Could not pull image: %s", err)
     }
   }
 
   curTaskNum := 0
-  totalTasks := j.waitList.Len() * len(j.Runs)
+  totalTasks := cfg.waitList.Len() * len(cfg.job.Runs)
 
   // Continuously iterate over the wait list and the queue of the task to
   // determine whether there is space for the task's run to be scheduled
   // on the available list of cores.
-  for i := 0; j.waitList.Len() > 0; {
+  for i := 0; cfg.waitList.Len() > 0; {
     // Continiously updates the number of available cores free so this
     // particular task's run so we can decide whether to schedule it.
     freeCores = tasksInFlight.FreeCores()
@@ -429,7 +222,7 @@ func (j *Job) Start() error {
     }
 
     // Get the next task from the job's queue
-    task, err := j.waitList.Get(i)
+    task, err := cfg.waitList.Get(i)
     if err != nil {
       i = 0 // jump back to task 0 in case we overflow
       log.Errorf("Could not get task from wait list: %s", err)
@@ -445,12 +238,12 @@ func (j *Job) Start() error {
 
     // Can we schedule this run?  Use an else if here so we don't ruin the
     // ordering of the iterator `i`
-    } else if len(freeCores) >= nextRun.(run.Run).Cores {
+    } else if len(freeCores) >= nextRun.(spec.Run).Cores {
       // Check if the peaked run is currently active
       tasksInFlight.RLock()
       for _, atr := range tasksInFlight.All() {
         if atr != nil {
-          if (atr.(*ActiveTaskRun)).Task.UUID() == task.(*Task).UUID() {
+          if (atr.(*ActiveTaskRun)).Task.permutation.UUID() == task.(*Task).permutation.UUID() {
             tasksInFlight.RUnlock()
             goto iterator
           }
@@ -460,7 +253,7 @@ func (j *Job) Start() error {
 
       // Select some core IDs for this run based on how many it requires
       var cores []int
-      for j := 0; j < nextRun.(run.Run).Cores; j++ {
+      for j := 0; j < nextRun.(spec.Run).Cores; j++ {
         cores = append(cores, freeCores[len(freeCores)-1])
         freeCores = freeCores[:len(freeCores)-1]
       }
@@ -468,11 +261,11 @@ func (j *Job) Start() error {
       // Initialize the task run
       activeTaskRun, err := NewActiveTaskRun(
         task.(*Task),
-        nextRun.(run.Run),
+        nextRun.(spec.Run),
         cores,
-        j.bridge,
-        j.dryRun,
-        j.maxRetries,
+        cfg.bridge,
+        cfg.DryRun,
+        cfg.MaxRetries,
       )
       if err != nil {
         log.Errorf("Could not initialize run for this task: %s", err)
@@ -564,16 +357,16 @@ activeTaskDone:
     }
 
 iterator:
-    time.Sleep(time.Duration(j.scheduleGrace) * time.Second)
+    time.Sleep(time.Duration(cfg.ScheduleGrace) * time.Second)
 
     // Remove the task if the queue is empty
     if task.(*Task).runs.Len() == 0 {
-      j.waitList.Remove(i)
+      cfg.waitList.Remove(i)
       i = i - 1
     }
 
     // Have we reached the end of the list?  Go back to zero otherwise continue.
-    if j.waitList.Len() == i + 1 {
+    if cfg.waitList.Len() == i + 1 {
       i = 0
     } else {
       i = i + 1
@@ -586,7 +379,7 @@ iterator:
 }
 
 // Cleanup provides a way to deschedule all currently active tasks
-func (j *Job) Cleanup() {
+func (cfg *RuntimeConfig) Cleanup() {
   // Iterate through active tasks
   for _, atr := range tasksInFlight.All() {
     // Skip cores which do not have a task

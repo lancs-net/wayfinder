@@ -46,6 +46,8 @@ import (
   "github.com/opencontainers/runc/libcontainer/configs"
 
   "github.com/lancs-net/ukbench/internal/log"
+
+  "github.com/lancs-net/ukbench/spec"
 )
 
 var (
@@ -72,38 +74,14 @@ var (
   }
 )
 
-type Run struct {
-  Name           string `yaml:"name"`
-  Image          string `yaml:"image"`
-  Cores          int    `yaml:"cores"`
-  Devices      []string `yaml:"devices"`
-  Cmd            string `yaml:"cmd"`
-  Path           string `yaml:"path"`
-  Capabilities []string
-  exitCode       int
-  maxRetries     int
-}
-
 type Runner struct {
   log        *log.Logger
   Config     *RunnerConfig
   Bridge     *Bridge
   container   libcontainer.Container
   timer       time.Time
-  out      *[]Output
+  out      *[]spec.Output
   rootfs      string
-}
-
-type Input struct {
-  Name             string `yaml:"name"`
-  Source           string `yaml:"source"`
-  Destination      string `yaml:"destination"`
-  Options        []string `yaml:"options"`
-}
-
-type Output struct {
-  Name             string `yaml:"name"`
-  Path             string `yaml:"path"`
 }
 
 type RunnerConfig struct {
@@ -117,8 +95,8 @@ type RunnerConfig struct {
   Path             string
   Cmd              string
   AllowOverride    bool
-  Inputs        *[]Input
-  Outputs       *[]Output
+  Inputs        *[]spec.Input
+  Outputs       *[]spec.Output
   Env            []string
   Capabilities   []string
 }
@@ -145,7 +123,7 @@ func NewRunner(cfg *RunnerConfig, bridge *Bridge, dryRun bool) (*Runner, error) 
   return runner, nil
 }
 
-func (r *Runner) Init(in *[]Input, out *[]Output, dryRun bool) error {
+func (r *Runner) Init(in *[]spec.Input, out *[]spec.Output, dryRun bool) error {
   // Set the logger
   r.log = r.Config.Log
   
