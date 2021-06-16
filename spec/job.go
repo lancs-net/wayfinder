@@ -53,6 +53,7 @@ type Job struct {
   Inputs       []Input   `yaml:"inputs"`
   Outputs      []Output  `yaml:"outputs"`
   Runs         []Run     `yaml:"runs"`
+  permutations []*JobPermutation
 }
 
 type JobPermutation struct {
@@ -110,12 +111,18 @@ func (j *Job) NextPermutation(i int, perms []*JobPermutation, curr []ParamPermut
 
 // Permutations returns a list of all possible tasks based on parameterisation
 func (j *Job) Permutations() ([]*JobPermutation, error) {
+  if j.permutations != nil {
+    return j.permutations, nil
+  }
+
   var perm []*JobPermutation
 
   perm, err := j.NextPermutation(0, perm, nil)
   if err != nil {
     return nil, err
   }
+
+  j.permutations = perm
 
   return perm, nil
 }
