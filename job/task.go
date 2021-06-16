@@ -39,6 +39,8 @@ import (
   "strings"
 
   "github.com/lancs-net/ukbench/internal/log"
+  "github.com/lancs-net/ukbench/internal/queue"
+
   "github.com/lancs-net/ukbench/run"
   "github.com/lancs-net/ukbench/spec"
 )
@@ -46,7 +48,7 @@ import (
 // Task is the specific iterated configuration
 type Task struct {
   permutation  *spec.JobPermutation
-  runs         *Queue
+  runs         *queue.Queue
   resultsDir    string
   cacheDir      string
   AllowOverride bool
@@ -59,7 +61,7 @@ func NewTask(perm *spec.JobPermutation, workDir string, allowOverride bool, runs
   }
 
   // Create a queue of runs for this particular task
-  t.runs = NewQueue(len(*runs))
+  t.runs = queue.NewQueue(len(*runs))
 
   // Set the working directory
   t.resultsDir = path.Join(workDir, "results", t.permutation.UUID())
