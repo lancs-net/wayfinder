@@ -36,18 +36,6 @@ import (
   "crypto/md5"
 )
 
-type Input struct {
-  Name           string `yaml:"name"`
-  Source         string `yaml:"source"`
-  Destination    string `yaml:"destination"`
-  Options      []string `yaml:"options"`
-}
-
-type Output struct {
-  Name           string `yaml:"name"`
-  Path           string `yaml:"path"`
-}
-
 type Job struct {
   Params       []Param   `yaml:"params"`
   Inputs       []Input   `yaml:"inputs"`

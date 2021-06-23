@@ -30,6 +30,18 @@ package spec
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+type Input struct {
+  Name           string `yaml:"name"`
+  Source         string `yaml:"source"`
+  Destination    string `yaml:"destination"`
+  Options      []string `yaml:"options"`
+}
+
+type Output struct {
+  Name           string `yaml:"name"`
+  Path           string `yaml:"path"`
+}
+
 type Run struct {
   Name           string `yaml:"name"`
   Image          string `yaml:"image"`
@@ -38,6 +50,6 @@ type Run struct {
   Cmd            string `yaml:"cmd"`
   Path           string `yaml:"path"`
   Capabilities []string
-  exitCode       int
-  maxRetries     int
+  Inputs       []Input  `yaml:"inputs"`
+  Outputs      []Output `yaml:"outputs"`
 }
