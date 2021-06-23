@@ -46,7 +46,7 @@ import (
 
 type SimpleScheduler struct {
   Scheduler
-  config         *spec.Runtime
+  config         *spec.RuntimeSpec
   tasksInFlight  *coremap.CoreMap
   freeCores     []int
   wg              sync.WaitGroup
@@ -56,7 +56,7 @@ type SimpleScheduler struct {
   permutations []*spec.JobPermutation
 }
 
-func (ss *SimpleScheduler) Init(config *spec.Runtime, cpus []int, perms []*spec.JobPermutation) error {
+func (ss *SimpleScheduler) Init(config *spec.RuntimeSpec, cpus []int, perms []*spec.JobPermutation) error {
   log.Debugf("Initializing simple scheduler...")
 
   if len(cpus) == 0 {

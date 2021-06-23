@@ -39,7 +39,7 @@ import (
 )
 
 type Scheduler interface {
-  Init(*spec.Runtime, []int, []*spec.JobPermutation) error
+  Init(*spec.RuntimeSpec, []int, []*spec.JobPermutation) error
   Iterator() <- chan func(bridge *runner.Bridge)
   Cleanup()
 }
