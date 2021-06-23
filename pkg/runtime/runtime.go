@@ -52,7 +52,7 @@ import (
 
 // RuntimeActivity contains details about the runtime of ukbench
 type RuntimeActivity struct {
-  config         *spec.Runtime
+  config         *spec.RuntimeSpec
   cpus          []int
   bridge         *runner.Bridge
   job            *spec.Job
@@ -60,7 +60,7 @@ type RuntimeActivity struct {
 }
 
 // NewRuntimeActivity
-func NewRuntimeActivity(r *spec.Runtime, cpus []int, jobFile string) (*RuntimeActivity, error) {
+func NewRuntimeActivity(r *spec.RuntimeSpec, cpus []int, jobFile string) (*RuntimeActivity, error) {
   // Check if the path is set
   if len(jobFile) == 0 {
     return nil, fmt.Errorf("File path cannot be empty")
