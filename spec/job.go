@@ -52,8 +52,8 @@ type JobPermutation struct {
   uuid          string
 }
 
-// NextPermutation recursively iterates across paramters to generate a set of tasks
-func (j *Job) NextPermutation(i int, perms []*JobPermutation, curr []ParamPermutation) ([]*JobPermutation, error) {
+// next recursively iterates across paramters to generate a set of tasks
+func (j *Job) next(i int, perms []*JobPermutation, curr []ParamPermutation) ([]*JobPermutation, error) {
   // List all permutations for this parameter
   params, err := paramPermutations(&j.Params[i])
   if err != nil {
@@ -85,7 +85,7 @@ func (j *Job) NextPermutation(i int, perms []*JobPermutation, curr []ParamPermut
 
     // Otherwise, recursively parse parameters in-order    
     } else {
-      nextPerms, err := j.NextPermutation(i + 1, nil, curr)
+      nextPerms, err := j.next(i + 1, nil, curr)
       if err != nil {
         return nil, err
       }
@@ -105,7 +105,7 @@ func (j *Job) Permutations() ([]*JobPermutation, error) {
 
   var perm []*JobPermutation
 
-  perm, err := j.NextPermutation(0, perm, nil)
+  perm, err := j.next(0, perm, nil)
   if err != nil {
     return nil, err
   }
