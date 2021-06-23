@@ -36,9 +36,9 @@ type RuntimeSpec struct {
   ScheduleGrace int     `short:"g" long:"scheduler-grace" yaml:"schedule_grace" description:"Number of seconds to gracefully wait in the scheduler." default:"1"`
   WorkDir       string  `short:"w" long:"workdir" yaml:"workdir" description:"Specify working directory for outputting results, data, file systems, etc."`
   AllowOverride bool    `short:"O" long:"override" yaml:"allow_io_override" description:"Override contents in directories (otherwise tasks allowed to fail)."`
-  HostNetwork   string  `short:"h" long:"host-net" yaml:"host_network" description:"" default:""`
-  BridgeName    string  `short:"b" long:"bridge" yaml:"bridge_name" description:"" default:"ukbench0"`
-  BridgeSubnet  string  `short:"n" long:"subnet" yaml:"bridge_subnet" description:"" default:"172.88.0.1/16"`
+  HostNetwork   string  `short:"h" long:"host-net" yaml:"host_network" description:"The host network to attach the bridge to." default:"eth0"`
+  BridgeName    string  `short:"b" long:"bridge" yaml:"bridge_name" description:"The bridge network to attach services to." default:"ukbench0"`
+  BridgeSubnet  string  `short:"n" long:"subnet" yaml:"bridge_subnet" description:"The subnet of addresses for container services." default:"172.88.0.1/16"`
   MaxRetries    int     `short:"r" long:"max-retries" yaml:"max_retries" description:"Maximum number of retries for a failed permutation" default:"0"`
   Scheduler     string  `short:"x" long:"scheduler" yaml:"scheduler" description:"Parameter permutation scheduler" default:"simple"`
 }
