@@ -32,10 +32,10 @@ package spec
 
 type RuntimeSpec struct {
   CpuSets       string  `short:"s" long:"cpu-sets" yaml:"cpu_sets" description:"Specify which CPUs to run experiments on."`
-  DryRun        bool    `short:"D" long:"dry-run" yaml:"dry_run" description:"Run without affecting the host or running the jobs." default:"false"`
+  DryRun        bool    `short:"D" long:"dry-run" yaml:"dry_run" description:"Run without affecting the host or running the jobs."`
   ScheduleGrace int     `short:"g" long:"scheduler-grace" yaml:"schedule_grace" description:"Number of seconds to gracefully wait in the scheduler." default:"1"`
   WorkDir       string  `short:"w" long:"workdir" yaml:"workdir" description:"Specify working directory for outputting results, data, file systems, etc."`
-  AllowOverride bool    `short:"O" long:"override" yaml:"allow_io_override" description:"Override contents in directories (otherwise tasks allowed to fail)." default:"false"`
+  AllowOverride bool    `short:"O" long:"override" yaml:"allow_io_override" description:"Override contents in directories (otherwise tasks allowed to fail)."`
   HostNetwork   string  `short:"h" long:"host-net" yaml:"host_network" description:"" default:""`
   BridgeName    string  `short:"b" long:"bridge" yaml:"bridge_name" description:"" default:"ukbench0"`
   BridgeSubnet  string  `short:"n" long:"subnet" yaml:"bridge_subnet" description:"" default:"172.88.0.1/16"`
