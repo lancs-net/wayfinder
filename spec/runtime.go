@@ -30,7 +30,7 @@ package spec
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-type Runtime struct {
+type RuntimeSpec struct {
   CpuSets       string  `short:"s" long:"cpu-sets" yaml:"cpu_sets" description:"Specify which CPUs to run experiments on."`
   DryRun        bool    `short:"D" long:"dry-run" yaml:"dry_run" description:"Run without affecting the host or running the jobs." default:"false"`
   ScheduleGrace int     `short:"g" long:"scheduler-grace" yaml:"schedule_grace" description:"Number of seconds to gracefully wait in the scheduler." default:"1"`
