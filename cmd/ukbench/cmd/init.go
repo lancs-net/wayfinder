@@ -3,7 +3,7 @@ package cmd
 //
 // Authors: Alexander Jung <a.jung@lancs.ac.uk>
 //
-// Copyright (c) 2020, Lancaster University.  All rights reserved.
+// Copyright (c) 2021, Lancaster University.  All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
@@ -32,23 +32,23 @@ package cmd
 
 import (
   "runtime"
-
-	"github.com/spf13/cobra"
+  
   "github.com/opencontainers/runc/libcontainer"
   _ "github.com/opencontainers/runc/libcontainer/nsenter"
 
-  "github.com/lancs-net/ukbench/internal/log"
+	"github.com/lancs-net/ukbench/internal/log"
 )
 
-var runcInitCmd = &cobra.Command{
-  Use: "runc-init",
-  Short: "This is the entrypoint for runc's libcontainer.  Do not call directly.",
-  Run: doRuncInitCmd,
-  Hidden: true,
+var (
+  InitCommandDescription = "This is the entrypoint for runc's libcontainer.  Do not call directly."
+  InitCommandHelp        = InitCommandDescription
+)
+
+type InitCommand struct {
+  
 }
 
-// doRuncInitCmd is the entrypoint for libcontainer
-func doRuncInitCmd(cmd *cobra.Command, args []string) {
+func (c *InitCommand) Execute(args []string) error {
   runtime.GOMAXPROCS(1)
   runtime.LockOSThread()
 

@@ -1,9 +1,9 @@
-package cmd
+package main
 // SPDX-License-Identifier: BSD-3-Clause
 //
 // Authors: Alexander Jung <a.jung@lancs.ac.uk>
 //
-// Copyright (c) 2020, Lancaster University.  All rights reserved.
+// Copyright (c) 2021, Lancaster University.  All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions
@@ -33,54 +33,71 @@ package cmd
 import (
 	"os"
 	"fmt"
+  "os/signal"
+  "runtime/debug"
 
-  "github.com/lancs-net/ukbench/internal/log"
+	flags "github.com/jessevdk/go-flags"
 
-	"github.com/spf13/cobra"
+  "github.com/lancs-net/ukbench/cmd/ukbench/cmd"
 )
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use: "ukbench",
-	Short: `ukbench is the Unified Unikernel Benchmarking Framework`,
-	PersistentPreRun: doRootCmd,
-	DisableFlagsInUseLine: true,
-}
+var (
+  version   = "No version provided"
+  commit    = "No commit provided"
+  buildTime = "No build timestamp provided"
+)
 
-// Execute adds all child commands to the root command and sets flags
-// appropriately.
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+func main() {
+  // Catch panics
+	defer func() {
+		if r := recover(); r != nil {
+			debug.PrintStack()
+			shutdown(1)
+		}
+	}()
+
+  // Create a Ctrl+C trap for reverting machine state
+  ch := make(chan os.Signal, 1)
+  signal.Notify(ch, os.Interrupt)
+  go func(){
+    <-ch
+    shutdown(1)
+  }()
+
+  parser := flags.NewNamedParser("ukbench", flags.Default)
+
+  parser.AddCommand("run",
+		cmd.RunCommandDescription,
+    cmd.RunCommandHelp,
+		&cmd.RunCommand{},
+	)
+
+	i, _ := parser.AddCommand("runc-init",
+		cmd.InitCommandDescription,
+    cmd.InitCommandHelp,
+		&cmd.InitCommand{},
+	)
+  i.Hidden = true
+
+  if _, err := parser.Parse(); err != nil {
+		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
+			shutdown(0)
+		} else {
+			fmt.Println()
+			parser.WriteHelp(os.Stdout)
+			fmt.Printf(
+        "\nBuild information:\n" +
+        "  version: %s\n" +
+        "  commit: %s\n" +
+        "  date: %s\n", version, commit, buildTime)
+			shutdown(1)
+		}
 	}
 }
 
-// doRootCmd 
-func doRootCmd(cmd *cobra.Command, args []string) {
-	verbose, err := cmd.Flags().GetBool("verbose")
-	if err != nil {
-		fmt.Printf("%s\n", err)
-		os.Exit(0)
-	}
+func shutdown(exitcode int) {
+  ukruntime.RevertEnvironment(c.DryRun)
 
-	initLogging(verbose)
-}
-
-func init() {
-	// Persistent global flags
-	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Enable verbose logging")
-
-	// Subcommands
-	rootCmd.AddCommand(runCmd)
-	rootCmd.AddCommand(versionCmd)
-  rootCmd.AddCommand(runcInitCmd)
-}
-
-// initLogging prepares logrus with sensible defaults
-func initLogging(verbose bool) {
-  // Only log the warning severity or above.
-  if verbose {
-		log.SetLevel(log.DEBUG)
-	}
+	// return exit code
+	os.Exit(exitcode)
 }

@@ -33,6 +33,7 @@
 WORKDIR     ?= $(CURDIR)
 TESTDIR     ?= $(WORKDIR)/tests
 DISTDIR     ?= $(WORKDIR)/dist
+CMDDIR      ?= $(WORKDIR)/cmd
 INSTALLDIR  ?= /usr/local/bin/
 
 # Arguments
@@ -103,7 +104,9 @@ $(.PROXY)build:
 	$(GO) build \
 		-ldflags='$(GO_GCFLAGS)' \
 		-ldflags='$(GO_LDFLAGS)' \
-		-o $(DISTDIR)/$(BIN)
+		-o $(DISTDIR)/$(BIN) \
+		$(CMDDIR)/$(BIN)
+
 
 # Create an environment where we can build
 .PHONY: container
