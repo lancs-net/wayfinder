@@ -71,13 +71,19 @@ func (c *RunCommand) Execute(args []string) error {
   }
 
   // Create the caching dir
-  cacheDir := path.Join(c.WorkDir, ".cache")
+  if c.CacheDir == "" {
+    c.CacheDir = path.Join(c.WorkDir, ".cache")
+  }
+  cacheDir := path.Join(c.CacheDir)
   if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
     os.MkdirAll(cacheDir, os.ModePerm)
   }
 
   // Create the results dir
-  rersultsDir := path.Join(c.WorkDir, "results")
+  if c.ResultsDir == "" {
+    c.ResultsDir = path.Join(c.WorkDir, "results")
+  }
+  rersultsDir := path.Join(c.ResultsDir)
   if _, err := os.Stat(rersultsDir); os.IsNotExist(err) {
     os.MkdirAll(rersultsDir, os.ModePerm)
   }
