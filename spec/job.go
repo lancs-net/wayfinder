@@ -36,24 +36,24 @@ import (
   "crypto/md5"
 )
 
-type Job struct {
-  Params       []Param   `yaml:"params"`
-  Inputs       []Input   `yaml:"inputs"`
-  Outputs      []Output  `yaml:"outputs"`
-  Runs         []Run     `yaml:"runs"`
+type JobSpec struct {
+  Params       []ParamSpec   `yaml:"params"`
+  Inputs       []InputSpec   `yaml:"inputs"`
+  Outputs      []OutputSpec  `yaml:"outputs"`
+  Runs         []RunSpec     `yaml:"runs"`
   permutations []*JobPermutation
 }
 
 type JobPermutation struct {
   Params       []ParamPermutation
-  Inputs      *[]Input
-  Outputs     *[]Output
-  Runs        *[]Run
+  Inputs      *[]InputSpec
+  Outputs     *[]OutputSpec
+  Runs        *[]RunSpec
   uuid          string
 }
 
 // next recursively iterates across paramters to generate a set of tasks
-func (j *Job) next(i int, perms []*JobPermutation, curr []ParamPermutation) ([]*JobPermutation, error) {
+func (j *JobSpec) next(i int, perms []*JobPermutation, curr []ParamPermutation) ([]*JobPermutation, error) {
   // List all permutations for this parameter
   params, err := paramPermutations(&j.Params[i])
   if err != nil {
@@ -98,7 +98,7 @@ func (j *Job) next(i int, perms []*JobPermutation, curr []ParamPermutation) ([]*
 }
 
 // Permutations returns a list of all possible tasks based on parameterisation
-func (j *Job) Permutations() ([]*JobPermutation, error) {
+func (j *JobSpec) Permutations() ([]*JobPermutation, error) {
   if j.permutations != nil {
     return j.permutations, nil
   }

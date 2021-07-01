@@ -30,26 +30,26 @@ package spec
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-type Input struct {
+type InputSpec struct {
   Name           string `yaml:"name"`
   Source         string `yaml:"source"`
   Destination    string `yaml:"destination"`
   Options      []string `yaml:"options"`
 }
 
-type Output struct {
+type OutputSpec struct {
   Name           string `yaml:"name"`
   Path           string `yaml:"path"`
 }
 
-type Run struct {
-  Name           string `yaml:"name"`
-  Image          string `yaml:"image"`
-  Cores          int    `yaml:"cores"`
-  Devices      []string `yaml:"devices"`
-  Cmd            string `yaml:"cmd"`
-  Path           string `yaml:"path"`
-  Capabilities []string
-  Inputs       []Input  `yaml:"inputs"`
-  Outputs      []Output `yaml:"outputs"`
+type RunSpec struct {
+  Name           string     `yaml:"name"`
+  Image          string     `yaml:"image"`
+  Cores          int        `yaml:"cores"`
+  Devices      []string     `yaml:"devices"`
+  Cmd            string     `yaml:"cmd"`
+  Path           string     `yaml:"path"`
+  Capabilities []string     `yaml:"capabilities"`
+  Inputs       []InputSpec  `yaml:"inputs"`
+  Outputs      []OutputSpec `yaml:"outputs"`
 }

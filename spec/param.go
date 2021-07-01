@@ -38,7 +38,7 @@ import (
   "github.com/lancs-net/ukbench/internal/log"
 )
 
-type Param struct {
+type ParamSpec struct {
   Name           string `yaml:"name"`
   Type           string `yaml:"type"`
   Default        string `yaml:"default"`
@@ -56,7 +56,7 @@ type ParamPermutation struct {
 }
 
 // parseParamInt attends to string parameters and its possible permutations
-func parseParamStr(param *Param) ([]ParamPermutation, error) {
+func parseParamStr(param *ParamSpec) ([]ParamPermutation, error) {
   var params []ParamPermutation
 
   if len(param.Only) > 0 {
@@ -79,7 +79,7 @@ func parseParamStr(param *Param) ([]ParamPermutation, error) {
 }
 
 // parseParamInt attends to integer parameters and its possible permutations
-func parseParamInt(param *Param) ([]ParamPermutation, error) {
+func parseParamInt(param *ParamSpec) ([]ParamPermutation, error) {
   var params []ParamPermutation
 
   // Parse values in only
@@ -165,7 +165,7 @@ func parseParamInt(param *Param) ([]ParamPermutation, error) {
 
 // paramPermutations discovers all the possible variants of a particular
 // parameter based on its type and options.
-func paramPermutations(param *Param) ([]ParamPermutation, error) {
+func paramPermutations(param *ParamSpec) ([]ParamPermutation, error) {
   switch t := param.Type; t {
   case "string":
     return parseParamStr(param)
