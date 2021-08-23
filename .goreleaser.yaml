@@ -1,0 +1,24 @@
+release:
+  prerelease: false
+
+builds:
+  - binary: wayfinder
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+    ldflags: -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.buildTime={{.Date}}`.
+
+archives:
+  - format: tar.gz
+
+nfpms:
+  - license: BSD-3-Clause
+    maintainer: Alexander Jung
+    homepage: https://github.com/lancs-net/wayfinder/
+    description: "wayfinder: OS Configuration Micro-Benchmarking Framework"
+    formats:
+      - rpm
+      - deb

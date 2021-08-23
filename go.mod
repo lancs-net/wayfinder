@@ -1,4 +1,4 @@
-module github.com/lancs-net/ukbench
+module github.com/lancs-net/wayfinder
 
 go 1.14
 

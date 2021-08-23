@@ -31,7 +31,7 @@ package main
 // POSSIBILITY OF SUCH DAMAGE.
 
 import (
-  "github.com/lancs-net/ukbench/cmd"
+  "github.com/lancs-net/wayfinder/cmd"
 )
 
 var (

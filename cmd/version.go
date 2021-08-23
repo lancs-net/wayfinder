@@ -59,6 +59,6 @@ var versionCmd = &cobra.Command{
 
 // doVersionCmd 
 func doVersionCmd(cmd *cobra.Command, args []string) {
-	fmt.Printf("ukbench %s\n", version.Version)
+	fmt.Printf("wayfinder %s\n", version.Version)
 	os.Exit(0)
 }

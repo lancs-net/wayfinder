@@ -69,7 +69,7 @@ outputs:
 
 runs:
   - name: build
-    image: ukbench/unikraft
+    image: wayfinder/unikraft
     cores: 1
     devices:
       - /dev/urandom
@@ -117,7 +117,7 @@ runs:
       find -depth -print | tac | bsdcpio -o --format newc > ../initramfs.cpio
 
   - name: run
-    image: ukbench/unikraft
+    image: wayfinder/unikraft
     cores: 30
     devices:
       - /dev/kvm

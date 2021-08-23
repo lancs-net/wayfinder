@@ -44,8 +44,8 @@ import (
   "gopkg.in/yaml.v2"
   "github.com/novln/docker-parser"
 
-  "github.com/lancs-net/ukbench/log"
-  "github.com/lancs-net/ukbench/run"
+  "github.com/lancs-net/wayfinder/log"
+  "github.com/lancs-net/wayfinder/run"
 )
 
 type JobParam struct {
@@ -71,7 +71,7 @@ type Job struct {
   maxRetries    int
 }
 
-// RuntimeConfig contains details about the runtime of ukbench
+// RuntimeConfig contains details about the runtime of wayfinder
 type RuntimeConfig struct {
   Cpus          []int
   BridgeName      string

@@ -34,15 +34,15 @@ import (
 	"os"
 	"fmt"
 
-  "github.com/lancs-net/ukbench/log"
+  "github.com/lancs-net/wayfinder/log"
 
 	"github.com/spf13/cobra"
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use: "ukbench",
-	Short: `ukbench is the Unified Unikernel Benchmarking Framework`,
+	Use: "wayfinder",
+	Short: `wayfinder: OS Configuration Micro-Benchmarking Framework`,
 	PersistentPreRun: doRootCmd,
 	DisableFlagsInUseLine: true,
 }

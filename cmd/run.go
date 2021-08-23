@@ -41,8 +41,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/lancs-net/ukbench/log"
-	"github.com/lancs-net/ukbench/job"
+	"github.com/lancs-net/wayfinder/log"
+	"github.com/lancs-net/wayfinder/job"
 )
 
 type RunConfig struct {
@@ -115,7 +115,7 @@ func init() {
     &runConfig.BridgeName,
     "bridge",
     "b",
-    "ukbench0",
+    "wayfinder0",
     "",
   )
   runCmd.PersistentFlags().StringVarP(

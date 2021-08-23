@@ -1,0 +1,65 @@
+cff-version: 1.2.0
+title: "wayfinder: OS Configuration Micro-Benchmarking Framework"
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Jung"
+  given-names: "Alexander"
+  orcid: "https://orcid.org/0000-0002-8139-2864"
+version: 0.1.0
+date-released: 2021-08-25
+url: "https://github.com/lancs-net/wayfinder"
+license: BSD-3-Clause
+preferred-citation:
+  title: "Wayfinder: Towards Automatically Deriving Optimal OS Configurations"
+  authors:
+    - family-names: "Jung"
+      given-names: "Alexander"
+      affiliation: "Lancaster University"
+      city: "Lancaster"
+      country: "UK"
+      orcid: "https://orcid.org/0000-0002-8139-2864"
+    - family-names: "Lefeuvre"
+      given-names: "Hugo"
+      affiliation: "The University of Manchester"
+      city: "Manchester"
+      country: "UK"
+      orcid: "https://orcid.org/0000-0001-9547-7458"
+    - family-names: "Rotsos"
+      given-names: "Charalampos"
+      affiliation: "Lancaster University"
+      city: "Lancaster"
+      country: "UK"
+      orcid: "https://orcid.org/0000-0003-0252-9373"
+    - family-names: "Olivier"
+      given-names: "Pierre"
+      affiliation: "The University of Manchester"
+      city: "Manchester"
+      country: "UK"
+    - family-names: "Oñoro-Rubio"
+      given-names: "Daniel"
+      affiliation: "NEC Laboratories Europe GmbH"
+      city: "Heidelberg"
+      country: "DE"
+    - family-names: "Niepert"
+      given-names: "Mathias"
+      affiliation: "NEC Laboratories Europe GmbH"
+      city: "Heidelberg"
+      country: "DE"
+    - family-names: "Huici"
+      given-names: "Felipe"
+      affiliation: "NEC Laboratories Europe GmbH"
+      city: "Heidelberg"
+      country: "DE"
+  doi: 10.1145/3476886.3477506
+  isbn: 978-1-4503-8698-2/21/08
+  type: conference-paper
+  conference:
+    name: "12th ACM SIGOPS Asia-Pacific Workshop on Systems (APSys'21)"
+    date-end: "2021-08-24"
+    date-start: "2021-08-25"
+  publisher: Association for Computing Machinery
+  start: 115
+  end: 122
+  pages: 8
+  month: 8
+  year: 2021

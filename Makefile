@@ -38,7 +38,7 @@ INSTALLDIR  ?= /usr/local/bin/
 # Arguments
 REGISTRY    ?= ghcr.io
 ORG         ?= lancs-net
-BIN         ?= ukbench
+BIN         ?= wayfinder
 IMAGE_TAG   ?= latest
 IMAGE       ?= $(REGISTRY)/$(ORG)/$(BIN):$(IMAGE_TAG)
 
@@ -122,3 +122,56 @@ container:
 devenv: DOCKER_RUN_EXTRA ?= -it --name $(BIN)-devenv
 devenv:
 	$(Q)$(call DOCKER_RUN,$(DOCKER_RUN_EXTRA),bash)
+
+
+# For CI
+.PHONY: ci-install-ci-tools
+ci-install-ci-tools:
+	curl -sfL https://install.goreleaser.com/github.com/goreleaser/goreleaser.sh | sh -s -- -b /usr/local/bin/ "v0.146.0"
+
+
+.PHONY: ci-publish-release
+ci-publish-release:
+	goreleaser --rm-dist
+
+.PHONY: ci-build-snapshot-packages
+ci-build-snapshot-packages:
+	goreleaser \
+		--snapshot \
+		--skip-publish \
+		--rm-dist
+
+.PHONY: ci-release
+ci-release:
+	goreleaser release --rm-dist
+
+
+.PHONY: ci-test-deb-package-install
+ci-test-deb-package-install:
+	docker run \
+		-v //var/run/docker.sock://var/run/docker.sock \
+		-v /${PWD}://src \
+		-w //src \
+		ubuntu:latest \
+			/bin/bash -x -c "\
+				apt update && \
+				apt install ./dist/$(BIN)_*_linux_amd64.deb -y && \
+				$(BIN) version \
+			"
+
+.PHONY: ci-test-rpm-package-install
+ci-test-rpm-package-install:
+	docker run \
+		-v //var/run/docker.sock://var/run/docker.sock \
+		-v /${PWD}://src \
+		-w //src \
+		fedora:latest \
+			/bin/bash -x -c "\
+				dnf install ./dist/$(BIN)_*_linux_amd64.rpm -y && \
+				$(BIN) version \
+			"
+
+.PHONY: ci-test-linux-run
+ci-test-linux-run:
+	chmod 755 ./dist/$(BIN)_linux_amd64/$(BIN) && \
+	./dist/$(BIN)_linux_amd64/$(BIN) version

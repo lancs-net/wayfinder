@@ -34,7 +34,7 @@ ARG GO_VERSION=1.14
 FROM golang:${GO_VERSION}-stretch AS base
 
 ARG ORG=lancs-net
-ARG BIN=ukbench
+ARG BIN=wayfinder
 
 RUN set -xe; \
     apt-get update; \

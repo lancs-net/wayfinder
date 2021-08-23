@@ -34,7 +34,7 @@ import (
   "fmt"
   "sync"
 
-  "github.com/lancs-net/ukbench/log"
+  "github.com/lancs-net/wayfinder/log"
 )
 
 // CoreMap holds onto to a reference to the particular task which is currently

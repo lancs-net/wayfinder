@@ -1,0 +1,93 @@
+name: 'release'
+
+on:
+  push:
+  pull_request:
+    types: [ opened, reopened ]
+
+jobs:
+  build-artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v1
+        with:
+          go-version: '1.14.x'
+
+      - uses: actions/checkout@v1
+
+      - name: Install tooling
+        run: |
+          make ci-install-ci-tools
+      - name: Cache go dependencies
+        id: package-cache-go-dependencies
+        uses: actions/cache@v1
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-prod-${{ hashFiles('**/go.sum') }}
+          restore-keys: ${{ runner.os }}-go-prod-
+
+      - name: Install dependencies
+        if: steps.package-cache-go-dependencies.outputs.cache-hit != 'true'
+        run: make
+
+      - name: Build snapshot artifacts
+        run: make ci-build-snapshot-packages
+
+      - uses: actions/upload-artifact@master
+        with:
+          name: artifacts
+          path: dist
+
+
+  test-linux-artifacts:
+    needs: [ build-artifacts ]
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@master
+
+      - uses: actions/download-artifact@master
+        with:
+          name: artifacts
+          path: dist
+
+      - name: Test linux run
+        run: make ci-test-linux-run
+
+      - name: Test DEB package installation
+        run: make ci-test-deb-package-install
+
+      - name: Test RPM package installation
+        run: make ci-test-rpm-package-install
+
+  release:
+    needs: [ build-artifacts, test-linux-artifacts ]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+
+      - uses: actions/setup-go@v1
+        with:
+          go-version: '1.14.x'
+
+      - uses: actions/checkout@v1
+
+      - name: Install tooling
+        run: make ci-install-ci-tools
+
+      - name: Cache go dependencies
+        id: release-cache-go-dependencies
+        uses: actions/cache@v1
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-prod-${{ hashFiles('**/go.sum') }}
+          restore-keys: ${{ runner.os }}-go-prod-
+
+      - name: Install dependencies
+        if: steps.release-cache-go-dependencies.outputs.cache-hit != 'true'
+        run: make
+
+      - name: Publish GitHub release
+        run: make ci-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

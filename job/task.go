@@ -39,8 +39,8 @@ import (
   "strings"
 	"crypto/md5"
 
-  "github.com/lancs-net/ukbench/log"
-  "github.com/lancs-net/ukbench/run"
+  "github.com/lancs-net/wayfinder/log"
+  "github.com/lancs-net/wayfinder/run"
 )
 
 type TaskParam struct {
@@ -172,12 +172,12 @@ func (atr *ActiveTaskRun) Start() (int, time.Duration, error) {
     env = append(env, fmt.Sprintf("%s=%s", param.Name, param.Value))
   }
 
-  env = append(env, fmt.Sprintf("UKBENCH_TOTAL_CORES=%d", len(atr.CoreIds)))
-  env = append(env, fmt.Sprintf("UKBENCH_CORES=%s", strings.Trim(
+  env = append(env, fmt.Sprintf("WAYFINDER_TOTAL_CORES=%d", len(atr.CoreIds)))
+  env = append(env, fmt.Sprintf("WAYFINDER_CORES=%s", strings.Trim(
     strings.Join(strings.Fields(fmt.Sprint(atr.CoreIds)), " "), "[]",
   )))
   for i, coreId := range atr.CoreIds {
-    env = append(env, fmt.Sprintf("UKBENCH_CORE_ID%d=%d", i, coreId))
+    env = append(env, fmt.Sprintf("WAYFINDER_CORE_ID%d=%d", i, coreId))
   }
 
   config := &run.RunnerConfig{
