@@ -221,6 +221,11 @@ this repository.
 }
 ```
 
+### Resources
+
+ * [Paper](https://dl.acm.org/doi/10.1145/3476886.3477506) ([pdf](https://dl.acm.org/doi/pdf/10.1145/3476886.3477506))
+ * [Video](https://youtu.be/YLf86gcHW4E)
+
 ## License
 
 Wayfinder is licensed under `BSD-3-Clause`.  Read more in
