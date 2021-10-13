@@ -69,7 +69,7 @@ outputs:
 
 runs:
   - name: build
-    image: wayfinder/unikraft
+    image: ghcr.io/lancs-net/wayfinder/unikraft:latest
     cores: 1
     devices:
       - /dev/urandom
@@ -77,6 +77,8 @@ runs:
       |
       set -ex
       export UK_WORKDIR=/usr/src/unikraft
+      export KRAFTRC=/usr/src/unikraft/.kraftrc
+      export UK_CACHEDIR=/usr/src/unikraft/.kraftcache
       export LC_ALL=C.UTF-8
       export LANG=C.UTF-8
       for env in $(cat /etc/environment); do \
@@ -85,7 +87,7 @@ runs:
 
       cd /usr/src/unikraft/apps/nginx
 
-      kraft -v configure \
+      kraft -v configure -F \
         --arch x86_64 \
         --plat kvm \
         --set LWIP_NUM_TCPCON=$LWIP_NUM_TCPCON \
@@ -99,7 +101,7 @@ runs:
         --no  LIB9PFS \
         --no  LIBUK9P
 
-      kraft build
+      kraft build --no-progress --fast
       cat /nginx-$OPEN_FILE_CACHE.conf | sed "s/\$WORKER_CONNECTIONS/${WORKER_CONNECTIONS}/g" > ./fs0/nginx/conf/nginx.conf
       if [[ $ACCESS_LOG == "y" ]]; then \
         export ACCESS_LOG="\/dev\/stdout"; \
@@ -116,8 +118,8 @@ runs:
       tr -dc A-Za-z0-9 </dev/urandom | head -c ${PAYLOAD_SIZE} > ./nginx/html/payload.txt
       find -depth -print | tac | bsdcpio -o --format newc > ../initramfs.cpio
 
-  - name: run
-    image: wayfinder/unikraft
+  - name: test
+    image: ghcr.io/lancs-net/wayfinder/unikraft:latest
     cores: 30
     devices:
       - /dev/kvm
